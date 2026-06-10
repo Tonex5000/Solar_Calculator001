@@ -44,7 +44,7 @@ const Result = ({ results, isLoading, error, onReset }) => {
         <div className="result-card">
           <div className="result-icon">🔋</div>
           <div className="result-label">Battery Capacity</div>
-          <div className="result-value">{results.battery_capacity} <span>Ah</span></div>
+          <div className="result-value">{results.battery_ah} <span>Ah</span></div>
           <div className="result-note">Battery amp-hour rating</div>
         </div>
         
@@ -58,7 +58,14 @@ const Result = ({ results, isLoading, error, onReset }) => {
         <div className="result-card">
           <div className="result-icon">📦</div>
           <div className="result-label">Number of Panels</div>
-          <div className="result-value">{results.num_panels}</div>
+          <div className="result-value">{results.number_of_panels}</div>
+          <div className="result-note">Panels needed</div>
+        </div>
+
+         <div className="result-card">
+          <div className="result-icon">📦</div>
+          <div className="result-label">Number of Panels</div>
+          <div className="result-value">{results.battery_count}</div>
           <div className="result-note">Panels needed</div>
         </div>
       </div>
