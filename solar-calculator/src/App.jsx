@@ -14,6 +14,7 @@ function App() {
   const [formData, setFormData] = useState({
     load: '',
     backup_hours: '',
+    battery_eff:'',
     battery_voltage: '',
     charging_hours: '',
     panel_wattage: ''
@@ -34,6 +35,7 @@ function App() {
         return formData.backup_hours && 
                parseFloat(formData.backup_hours) >= 1 && 
                parseFloat(formData.backup_hours) <= 12;
+               formData.battery_eff !== '';
       case 3:
         return formData.battery_voltage !== '';
       case 4:
@@ -68,6 +70,7 @@ function App() {
     const payload = {
       load: parseFloat(formData.load),
       backup_hours: parseInt(formData.backup_hours),
+      battery_eff: parseFloat(formData.battery_eff),
       battery_voltage: parseInt(formData.battery_voltage),
       charging_hours: parseInt(formData.charging_hours),
       panel_wattage: parseInt(formData.panel_wattage)
@@ -101,6 +104,7 @@ function App() {
     setFormData({
       load: '',
       backup_hours: '',
+      battery_eff: '',
       battery_voltage: '',
       charging_hours: '',
       panel_wattage: ''
