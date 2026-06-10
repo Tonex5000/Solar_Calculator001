@@ -37,7 +37,7 @@ const Result = ({ results, isLoading, error, onReset }) => {
         <div className="result-card">
           <div className="result-icon">⚡</div>
           <div className="result-label">Inverter Size</div>
-          <div className="result-value">{results.inverter_watt} <span>W</span></div>
+          <div className="result-value">{results.inverter_watts} <span>W</span></div>
           <div className="result-note">Required inverter capacity</div>
         </div>
         
