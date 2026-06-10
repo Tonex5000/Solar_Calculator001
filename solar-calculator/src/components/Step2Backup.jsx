@@ -19,6 +19,19 @@ const Step2Backup = ({ data, onChange }) => {
         />
         <span className="hint">Number of hours the system should provide power when there's no sunlight</span>
       </div>
+      <div className="form-group">
+        <label htmlFor="battery_eff">Battery Efficiency</label>
+        <input
+          type="number"
+          id="backup_hours"
+          name="backup_hours"
+          value={data.battery_eff || ''}
+          onChange={(e) => onChange({ battery_eff: e.target.value })}
+          placeholder="e.g., 0.8"
+          autoFocus
+        />
+        <span className="hint">Tell us the efficiency of the battery</span>
+      </div>
     </div>
   );
 };
