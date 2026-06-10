@@ -63,10 +63,10 @@ const Result = ({ results, isLoading, error, onReset }) => {
         </div>
 
          <div className="result-card">
-          <div className="result-icon">📦</div>
-          <div className="result-label">Number of Panels</div>
+          <div className="result-icon">🔋</div>
+          <div className="result-label">Number of batteries</div>
           <div className="result-value">{results.battery_count}</div>
-          <div className="result-note">Panels needed</div>
+          <div className="result-note">Battries needed</div>
         </div>
       </div>
 
