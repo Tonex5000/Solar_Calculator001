@@ -160,17 +160,31 @@ function App() {
           {currentStep <= 5 && currentStep !== 1 && (
             <div className="button-group">
               {currentStep > 1 && (
-                <button onClick={handleBack} className="btn btn-secondary">
+                <button onClick={handleBack} className="btn btn-secondary" disabled={isLoading}>
                   Back
                 </button>
               )}
               <button
                 onClick={handleNext}
-                className="btn btn-primary"
-                disabled={!isStepValid(currentStep)}
+                className={`btn btn-primary ${isLoading ? 'btn-loading' : ''}`}
+                disabled={!isStepValid(currentStep) || isLoading}
               >
-                {currentStep === TOTAL_STEPS ? 'Calculate' : 'Next'}
+                {isLoading ? (
+                  <>
+                    <span className="btn-spinner"></span>
+                    Calculating...
+                  </>
+                ) : (
+                  currentStep === TOTAL_STEPS ? 'Calculate' : 'Next'
+                )}
               </button>
+            </div>
+          )}
+
+          {isLoading && currentStep <= 5 && (
+            <div className="loading-overlay">
+              <div className="loading-spinner"></div>
+              <p>Calculating your solar system...</p>
             </div>
           )}
         </div>
