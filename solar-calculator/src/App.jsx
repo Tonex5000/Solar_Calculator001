@@ -126,7 +126,7 @@ function App() {
       case 5:
         return <Step5Panel data={formData} onChange={updateFormData} />;
       case 6:
-        return <Result results={results} isLoading={isLoading} error={error} onReset={handleReset} />;
+        return <Result results={results} isLoading={isLoading} error={error} onReset={handleReset} formData={formData} />;
       default:
         return null;
     }

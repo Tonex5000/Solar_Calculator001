@@ -281,6 +281,27 @@ body {
   margin-right: auto;
 }
 
+.btn-pdf {
+  width: 100%;
+  max-width: 400px;
+  margin: 20px auto;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: block;
+}
+
+.btn-pdf:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4);
+}
+
 /* Loading & Error States */
 .loading {
   display: flex;
