@@ -1,6 +1,8 @@
 // Appliance data from PDF with categorized load types
 // Rules: "Nonlinear + Resistive" = Resistive, "Resistive + Inductive" = Inductive, "Inductive + Nonlinear" = Inductive
 
+import { useState } from 'react';
+
 const APPLIANCES_DATA = [
   // Inductive loads (Heavy motors) - Multiplier: 3
   { name: 'Air Conditioner', category: 'Inductive', multiplier: 3, wattage: '500 - 3,500 W' },
