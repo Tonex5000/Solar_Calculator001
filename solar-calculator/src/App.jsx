@@ -116,7 +116,7 @@ function App() {
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <Step1Load data={formData} onChange={updateFormData} />;
+        return <Step1Load data={formData} onChange={updateFormData} onNext={handleNext} />;
       case 2:
         return <Step2Backup data={formData} onChange={updateFormData} />;
       case 3:
@@ -157,7 +157,7 @@ function App() {
         <div className="form-card">
           {renderStep()}
 
-          {currentStep <= 5 && (
+          {currentStep <= 5 && currentStep !== 1 && (
             <div className="button-group">
               {currentStep > 1 && (
                 <button onClick={handleBack} className="btn btn-secondary">
