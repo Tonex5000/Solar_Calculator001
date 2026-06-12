@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 // Appliance data from PDF with categorized load types
 // Rules: "Nonlinear + Resistive" = Resistive, "Resistive + Inductive" = Inductive, "Inductive + Nonlinear" = Inductive
@@ -13,8 +13,8 @@ const APPLIANCES_DATA = [
   { name: 'Vacuum Cleaner', category: 'Inductive', multiplier: 3, wattage: '500 - 1,200 W' },
   { name: 'Dishwasher', category: 'Inductive', multiplier: 3, wattage: '1,200 - 2,400 W' },
   { name: 'Water Pump', category: 'Inductive', multiplier: 3, wattage: '500 - 1,500 W' },
-  { name: 'Inverter AC', category: 'Inductive', multiplier: 3, wattage: '500 - 2,500 W' }, // Inductive + Nonlinear = Inductive
-  { name: 'Hair Dryer', category: 'Inductive', multiplier: 3, wattage: '1,000 - 1,800 W' }, // Resistive + Inductive = Inductive
+  { name: 'Inverter AC', category: 'Inductive', multiplier: 3, wattage: '500 - 2,500 W' },
+  { name: 'Hair Dryer', category: 'Inductive', multiplier: 3, wattage: '1,000 - 1,800 W' },
 
   // Resistive loads (Heating) - Multiplier: 4
   { name: 'Electric Heater', category: 'Resistive', multiplier: 4, wattage: '1,000 - 2,000 W' },
@@ -24,7 +24,7 @@ const APPLIANCES_DATA = [
   { name: 'Electric Oven', category: 'Resistive', multiplier: 4, wattage: '2,000 - 5,000 W' },
   { name: 'Incandescent Bulb', category: 'Resistive', multiplier: 4, wattage: '40 - 100 W' },
   { name: 'Iron (Electric)', category: 'Resistive', multiplier: 4, wattage: '1,000 - 1,800 W' },
-  { name: 'Microwave Oven', category: 'Resistive', multiplier: 4, wattage: '600 - 1,200 W' }, // Nonlinear + Resistive = Resistive
+  { name: 'Microwave Oven', category: 'Resistive', multiplier: 4, wattage: '600 - 1,200 W' },
 
   // Nonlinear loads (Electronics) - Multiplier: 1
   { name: 'LED Light', category: 'Nonlinear', multiplier: 1, wattage: '5 - 20 W' },
@@ -43,6 +43,59 @@ const Step1Load = ({ data, onChange, onNext }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showSuggestions, setShowSuggestions] = useState({});
   const [activeSearchIndex, setActiveSearchIndex] = useState(null);
+  const [analyzingIndex, setAnalyzingIndex] = useState(null);
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const fileInputRefs = useRef({});
+
+  // Analyze image using AI
+  const analyzeImage = async (index, file) => {
+    setAnalyzingIndex(index);
+    setAnalysisResult(null);
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await fetch('http://localhost:3001/api/analyze-image', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze image');
+      }
+
+      const result = await response.json();
+      setAnalysisResult(result);
+
+      // Auto-fill wattage if found
+      if (result.wattage) {
+        handleWattageChange(index, result.wattage.toString());
+      }
+    } catch (error) {
+      console.error('Analysis error:', error);
+      setAnalysisResult({
+        wattage: null,
+        confidence: null,
+        raw_text: 'Error: Could not analyze image. Please try again or enter wattage manually.',
+        calculation: 'Connection error'
+      });
+    } finally {
+      setAnalyzingIndex(null);
+    }
+  };
+
+  // Handle file selection
+  const handleFileChange = (index, e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      analyzeImage(index, file);
+    }
+    // Reset input
+    if (fileInputRefs.current[index]) {
+      fileInputRefs.current[index].value = '';
+    }
+  };
 
   // Filter appliances based on search term
   const getFilteredAppliances = (search) => {
@@ -144,7 +197,6 @@ const Step1Load = ({ data, onChange, onNext }) => {
       appliances: appliances,
       applianceDetails: details
     });
-    // Move to next step after submitting
     onNext();
   };
 
@@ -196,17 +248,45 @@ const Step1Load = ({ data, onChange, onNext }) => {
               )}
             </div>
 
-            {/* Column 2: Wattage Input */}
+            {/* Column 2: Wattage Input with Scan Button */}
             <div className="form-group wattage-group">
               <label htmlFor={`wattage-${index}`}>Wattage (W)</label>
-              <input
-                type="number"
-                id={`wattage-${index}`}
-                value={app.wattage}
-                onChange={(e) => handleWattageChange(index, e.target.value)}
-                placeholder="e.g., 75"
-                min="1"
-              />
+              <div className="wattage-input-wrapper">
+                <input
+                  type="number"
+                  id={`wattage-${index}`}
+                  value={app.wattage}
+                  onChange={(e) => handleWattageChange(index, e.target.value)}
+                  placeholder="e.g., 75"
+                  min="1"
+                />
+                <label className={`scan-btn ${analyzingIndex === index ? 'analyzing' : ''}`}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={(el) => (fileInputRefs.current[index] = el)}
+                    onChange={(e) => handleFileChange(index, e)}
+                    disabled={analyzingIndex === index}
+                  />
+                  {analyzingIndex === index ? (
+                    <span className="scan-spinner">⏳</span>
+                  ) : (
+                    <span>📷</span>
+                  )}
+                </label>
+              </div>
+              
+              {/* Analysis Result */}
+              {analyzingIndex === index && (
+                <span className="analysis-status">Analyzing image...</span>
+              )}
+              {analysisResult && analyzingIndex === null && (
+                <span className={`analysis-result ${analysisResult.wattage ? 'success' : 'error'}`}>
+                  {analysisResult.wattage 
+                    ? `✓ Detected: ${analysisResult.wattage}W (${analysisResult.confidence})` 
+                    : `⚠ ${analysisResult.raw_text.substring(0, 50)}...`}
+                </span>
+              )}
             </div>
 
             {/* Column 3: Quantity Input */}
