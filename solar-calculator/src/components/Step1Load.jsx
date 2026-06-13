@@ -56,14 +56,23 @@ const Step1Load = ({ data, onChange, onNext }) => {
     formData.append('image', file);
 
     try {
-      const response = await fetch('https://solar-calculator001-5.onrender.com', {
+      console.log('Uploading image to:', `${API_BASE_URL}/api/analyze-image`);
+      
+      const response = await fetch(`${API_BASE_URL}/api/analyze-image`, {
         method: 'POST',
         body: formData,
       });
 
-      if (!response.ok) throw new Error('Failed to analyze image');
+      console.log('Response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error:', errorText);
+        throw new Error(`Server error: ${response.status}`);
+      }
 
       const result = await response.json();
+      console.log('Analysis result:', result);
       setAnalysisResult(result);
 
       if (result.wattage) {
@@ -73,7 +82,7 @@ const Step1Load = ({ data, onChange, onNext }) => {
       console.error('Analysis error:', error);
       setAnalysisResult({
         wattage: null,
-        raw_text: 'Error: Could not analyze image. Please try again or enter wattage manually.',
+        raw_text: `Error: ${error.message}. Please try again or enter wattage manually.`,
       });
     } finally {
       setAnalyzingIndex(null);
