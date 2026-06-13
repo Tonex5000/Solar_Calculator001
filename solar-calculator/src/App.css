@@ -561,7 +561,7 @@ body {
 
 .wattage-group input:focus,
 .quantity-group input:focus {
-  border-color: #667eea;
+  border-color: #000;
 }
 
 /* Wattage Input with Upload Button */
@@ -582,8 +582,8 @@ body {
   justify-content: center;
   padding: 6px 12px;
   background: transparent;
-  color: #667eea;
-  border: 1px solid #667eea;
+  color: #000;
+  border: 1px solid #000;
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.7rem;
@@ -592,7 +592,7 @@ body {
 }
 
 .upload-btn:hover {
-  background: #f0f4ff;
+  background: #f0f0f0;
 }
 
 .upload-btn.analyzing {
@@ -615,7 +615,7 @@ body {
   display: block;
   margin-top: 6px;
   font-size: 0.8rem;
-  color: #667eea;
+  color: #000;
   animation: pulse 1s ease-in-out infinite;
 }
 
