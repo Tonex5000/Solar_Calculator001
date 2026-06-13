@@ -45,6 +45,8 @@ const Step1Load = ({ data, onChange, onNext }) => {
 
   const fileInputRefs = useRef({});
 
+  const API_BASE_URL = 'https://solar-calculator001-5.onrender.com';
+
   // Analyze image using AI
   const analyzeImage = async (index, file) => {
     setAnalyzingIndex(index);
