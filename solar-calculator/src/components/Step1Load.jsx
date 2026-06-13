@@ -268,7 +268,12 @@ const Step1Load = ({ data, onChange, onNext }) => {
                     onChange={(e) => handleFileChange(index, e)}
                     disabled={analyzingIndex === index}
                   />
-                  {analyzingIndex === index ? 'Analyzing...' : 'Upload file'}
+                  {analyzingIndex === index ? 'Analyzing...' : (
+                    <>
+                      <span>Upload</span>
+                      <span>file</span>
+                    </>
+                  )}
                 </label>
               </div>
               
