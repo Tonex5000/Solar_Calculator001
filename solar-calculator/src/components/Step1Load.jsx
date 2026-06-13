@@ -45,6 +45,8 @@ const Step1Load = ({ data, onChange, onNext }) => {
 
   const fileInputRefs = useRef({});
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+
   // Analyze image using AI
   const analyzeImage = async (index, file) => {
     setAnalyzingIndex(index);
@@ -54,7 +56,7 @@ const Step1Load = ({ data, onChange, onNext }) => {
     formData.append('image', file);
 
     try {
-      const response = await fetch('http://localhost:3001/api/analyze-image', {
+      const response = await fetch(`${API_BASE_URL}/api/analyze-image`, {
         method: 'POST',
         body: formData,
       });
