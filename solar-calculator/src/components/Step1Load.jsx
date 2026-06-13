@@ -248,19 +248,19 @@ const Step1Load = ({ data, onChange, onNext }) => {
               )}
             </div>
 
-            {/* Column 2: Wattage Input with Scan Button */}
+            {/* Column 2: Wattage Input with Upload Button */}
             <div className="form-group wattage-group">
               <label htmlFor={`wattage-${index}`}>Wattage (W)</label>
-              <div className="wattage-input-wrapper">
+              <div className="wattage-input-row">
                 <input
                   type="number"
                   id={`wattage-${index}`}
                   value={app.wattage}
                   onChange={(e) => handleWattageChange(index, e.target.value)}
-                  placeholder="e.g., 75"
+                  placeholder="Enter wattage"
                   min="1"
                 />
-                <label className={`scan-btn ${analyzingIndex === index ? 'analyzing' : ''}`}>
+                <label className={`upload-btn ${analyzingIndex === index ? 'analyzing' : ''}`}>
                   <input
                     type="file"
                     accept="image/*"
@@ -268,11 +268,7 @@ const Step1Load = ({ data, onChange, onNext }) => {
                     onChange={(e) => handleFileChange(index, e)}
                     disabled={analyzingIndex === index}
                   />
-                  {analyzingIndex === index ? (
-                    <span className="scan-spinner">⏳</span>
-                  ) : (
-                    <span>📷</span>
-                  )}
+                  {analyzingIndex === index ? 'Analyzing...' : 'Upload file'}
                 </label>
               </div>
               
