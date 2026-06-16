@@ -8,7 +8,7 @@ import Groq from 'groq-sdk';
 import dotenv from 'dotenv';
 
 // Load both .env and .env.example
-dotenv.config({ path: '.env' });
+
 dotenv.config({ path: '.env.example' });
 
 const imagekit = new ImageKit({
