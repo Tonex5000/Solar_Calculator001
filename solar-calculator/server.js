@@ -247,8 +247,8 @@ Be precise and only report what you can clearly see.`
 app.listen(PORT, () => {
   console.log(`🚀 AI Vision API running on http://localhost:${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/api/health`);
-  groqapi = "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"
-  if (!groqapi) {
+  //groqapi = "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"
+  if (groqapi != "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") {
     console.warn('⚠️  Warning: GROQ_API_KEY not set in environment variables');
     console.warn('   The /api/analyze-image endpoint will not work without it.');
     console.warn('   Get your free API key at: https://console.groq.com/');
