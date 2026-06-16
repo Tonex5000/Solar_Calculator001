@@ -35,7 +35,7 @@ const upload = multer({
 });
 
 // Debug API key
-console.log("🔑 GROQ API KEY:", process.env.GROQ_API_KEY ? "Loaded ✅" : "Missing ❌");
+console.log("🔑 GROQ API KEY:", "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" ? "Loaded ✅" : "Missing ❌");
 
 // Initialize Groq
 const groq = new Groq({
