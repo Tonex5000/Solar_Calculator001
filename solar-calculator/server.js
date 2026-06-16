@@ -57,7 +57,7 @@ app.post('/api/analyze-image', upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'No image file provided' });
     }
     groqapi = "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"
-    if (!gropapi) {
+    if (!groqapi) {
       console.log("❌ API key missing");
       return res.status(500).json({ error: 'GROQ_API_KEY not configured' });
     }
@@ -147,8 +147,8 @@ app.post('/api/analyze-image', upload.single('image'), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
     }
-    gropapi = "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"
-    if (!) {
+    groqapi = "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"
+    if (!groqapi) {
       return res.status(500).json({ error: 'GROQ_API_KEY not configured' });
     }
 
