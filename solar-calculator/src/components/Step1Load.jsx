@@ -54,7 +54,7 @@ const Step1Load = ({ data, onChange, onNext }) => {
     formData.append('image', file);
 
     try {
-      const response = await fetch('https://solar-calculator001-5.onrender.com/api/analyze-image', {
+      const response = await fetch('https://solar-calculator001-1-332t.onrender.com/api/analyze-image', {
         method: 'POST',
         body: formData,
       });
