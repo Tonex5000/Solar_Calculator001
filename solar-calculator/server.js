@@ -39,7 +39,7 @@ console.log("🔑 GROQ API KEY:", "gsk_8OrAPo5knltj7RMVEryrWGdyb3FYyv1ADEzFoCr3R
 
 // Initialize Groq
 const groq = new Groq({
-  apiKey: process.env.example.GROQ_API_KEY
+  apiKey: "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"
 });
 
 // Health check
@@ -56,8 +56,8 @@ app.post('/api/analyze-image', upload.single('image'), async (req, res) => {
       console.log("❌ No file uploaded");
       return res.status(400).json({ error: 'No image file provided' });
     }
-
-    if (!process.env.example.GROQ_API_KEY) {
+    groqapi = "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"
+    if (!gropapi) {
       console.log("❌ API key missing");
       return res.status(500).json({ error: 'GROQ_API_KEY not configured' });
     }
@@ -147,8 +147,8 @@ app.post('/api/analyze-image', upload.single('image'), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
     }
-
-    if (!process.env.example.GROQ_API_KEY) {
+    gropapi = "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"
+    if (!) {
       return res.status(500).json({ error: 'GROQ_API_KEY not configured' });
     }
 
@@ -247,8 +247,8 @@ Be precise and only report what you can clearly see.`
 app.listen(PORT, () => {
   console.log(`🚀 AI Vision API running on http://localhost:${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/api/health`);
-  
-  if (!process.env.example.GROQ_API_KEY) {
+  groqapi = "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"
+  if (!groqapi) {
     console.warn('⚠️  Warning: GROQ_API_KEY not set in environment variables');
     console.warn('   The /api/analyze-image endpoint will not work without it.');
     console.warn('   Get your free API key at: https://console.groq.com/');
