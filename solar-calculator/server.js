@@ -1,4 +1,5 @@
 import express from 'express';
+import ImageKit from "imagekit";
 import cors from 'cors';
 import multer from 'multer';
 import { fileURLToPath } from 'url';
@@ -9,6 +10,12 @@ import dotenv from 'dotenv';
 // Load both .env and .env.example
 dotenv.config({ path: '.env' });
 dotenv.config({ path: '.env.example' });
+
+const imagekit = new ImageKit({
+  publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -146,8 +153,15 @@ app.post('/api/analyze-image', upload.single('image'), async (req, res) => {
     }
 
     // Convert image to base64
-    const base64Image = req.file.buffer.toString('base64');
-    const dataUrl = `data:${req.file.mimetype};base64,${base64Image}`;
+    const uploadResponse = await imagekit.upload({
+      file: req.file.buffer,
+      fileName: `upload_${Date.now()}.jpg`,
+      folder: "/ai-uploads"
+    });
+    
+    const imageUrl = uploadResponse.url;
+
+console.log("📸 Image URL:", imageUrl);
 
     const completion = await groq.chat.completions.create({
       messages: [
@@ -157,7 +171,7 @@ app.post('/api/analyze-image', upload.single('image'), async (req, res) => {
             {
               type: 'image_url',
               image_url: {
-                url: dataUrl
+                url: imageUrl
               }
             },
             {
