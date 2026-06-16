@@ -12,9 +12,9 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.example' });
 
 const imagekit = new ImageKit({
-  publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
-  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
-  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
+  publicKey: "public_vsId3htZEC6gSbS4wvd/wKPECX0=",
+  privateKey: "private_YDJs8PxLV0xBI10zYUt+M5RKdg0=",
+  urlEndpoint: "https://ik.imagekit.io/k6xytynbn"
 });
 
 const __filename = fileURLToPath(import.meta.url);
