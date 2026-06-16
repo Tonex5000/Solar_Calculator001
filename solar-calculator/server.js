@@ -52,7 +52,7 @@ app.post('/api/analyze-image', upload.single('image'), async (req, res) => {
 
     // ✅ Upload image to ImageKit
     const uploadResponse = await imagekit.upload({
-      file: req.file.buffer,
+      file: req.file.buffer.toString('base64'),
       fileName: `upload_${Date.now()}.jpg`,
       folder: "/ai-uploads"
     });
