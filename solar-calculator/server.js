@@ -21,7 +21,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.example.PORT || 3001;
 
 // Middleware
 app.use(cors());
@@ -39,7 +39,7 @@ console.log("🔑 GROQ API KEY:", "gsk_8OrAPo5knltj7RMVEryrWGdyb3FYyv1ADEzFoCr3R
 
 // Initialize Groq
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY
+  apiKey: process.env.example.GROQ_API_KEY
 });
 
 // Health check
@@ -57,7 +57,7 @@ app.post('/api/analyze-image', upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'No image file provided' });
     }
 
-    if (!process.env.GROQ_API_KEY) {
+    if (!process.env.example.GROQ_API_KEY) {
       console.log("❌ API key missing");
       return res.status(500).json({ error: 'GROQ_API_KEY not configured' });
     }
@@ -148,7 +148,7 @@ app.post('/api/analyze-image', upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'No image file provided' });
     }
 
-    if (!process.env.GROQ_API_KEY) {
+    if (!process.env.example.GROQ_API_KEY) {
       return res.status(500).json({ error: 'GROQ_API_KEY not configured' });
     }
 
@@ -248,7 +248,7 @@ app.listen(PORT, () => {
   console.log(`🚀 AI Vision API running on http://localhost:${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/api/health`);
   
-  if (!process.env.GROQ_API_KEY) {
+  if (!process.env.example.GROQ_API_KEY) {
     console.warn('⚠️  Warning: GROQ_API_KEY not set in environment variables');
     console.warn('   The /api/analyze-image endpoint will not work without it.');
     console.warn('   Get your free API key at: https://console.groq.com/');
