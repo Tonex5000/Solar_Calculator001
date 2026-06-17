@@ -29,7 +29,7 @@ app.get('/api/test-image', async (req, res) => {
     const imageUrl = "https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronius_Symo_20.0-3-M.jpg";
 
     const completion = await groq.chat.completions.create({
-      model: 'llama-3.2-11b-vision-preview',
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
       messages: [
         {
           role: 'user',
