@@ -304,12 +304,6 @@ const Step1Load = ({ data, onChange, onNext }) => {
         + Add More Appliances
       </button>
 
-      {total > 0 && (
-        <div className="total-load-display">
-          Total Load: <strong>{total} W</strong>
-        </div>
-      )}
-
       <button
         type="button"
         className="btn btn-submit"
