@@ -136,7 +136,7 @@ function App() {
     <div className="app">
       <div className="container">
         <header className="header">
-          <h1>☀️ Solar Sizing Calculator</h1>
+          <h1>Load Audit</h1>
           <p>Calculate your solar power system requirements</p>
         </header>
 
