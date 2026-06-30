@@ -43,7 +43,7 @@ const Step3Voltage = ({ data, onChange }) => {
 
   return (
     <div className="step-content">
-      <h2>Step 3: Inverter Switching Voltage</h2>
+      <h2>Step 2: Inverter Switching Voltage</h2>
       <p className="step-description">Select your inverter voltage settings based on your battery system</p>
       
       <div className="form-group">

@@ -32,12 +32,12 @@ function App() {
       case 1:
         return formData.load && parseFloat(formData.load) > 0;
       case 2:
+        return formData.inverter_voltage !== '';
+      case 3:
         return formData.backup_hours && 
                parseFloat(formData.backup_hours) >= 1 && 
                parseFloat(formData.backup_hours) <= 12 &&
                formData.battery_type !== '';
-      case 3:
-        return formData.inverter_voltage !== '';
       case 4:
         return formData.charging_hours && 
                parseFloat(formData.charging_hours) >= 1 && 
@@ -118,9 +118,9 @@ function App() {
       case 1:
         return <Step1Load data={formData} onChange={updateFormData} onNext={handleNext} />;
       case 2:
-        return <Step2Backup data={formData} onChange={updateFormData} />;
-      case 3:
         return <Step3Voltage data={formData} onChange={updateFormData} />;
+      case 3:
+        return <Step2Backup data={formData} onChange={updateFormData} />;
       case 4:
         return <Step4Charging data={formData} onChange={updateFormData} />;
       case 5:
