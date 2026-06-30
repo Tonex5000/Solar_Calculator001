@@ -14,8 +14,8 @@ function App() {
   const [formData, setFormData] = useState({
     load: '',
     backup_hours: '',
-    battery_eff:'',
-    battery_voltage: '',
+    battery_type: '',
+    inverter_voltage: '',
     charging_hours: '',
     panel_wattage: ''
   });
@@ -34,10 +34,10 @@ function App() {
       case 2:
         return formData.backup_hours && 
                parseFloat(formData.backup_hours) >= 1 && 
-               parseFloat(formData.backup_hours) <= 12;
-               formData.battery_eff !== '';
+               parseFloat(formData.backup_hours) <= 12 &&
+               formData.battery_type !== '';
       case 3:
-        return formData.battery_voltage !== '';
+        return formData.inverter_voltage !== '';
       case 4:
         return formData.charging_hours && 
                parseFloat(formData.charging_hours) >= 1 && 
@@ -70,8 +70,8 @@ function App() {
     const payload = {
       load: parseFloat(formData.load),
       backup_hours: parseInt(formData.backup_hours),
-      battery_eff: parseFloat(formData.battery_eff),
-      battery_voltage: parseInt(formData.battery_voltage),
+      battery_type: formData.battery_type,
+      inverter_voltage: formData.inverter_voltage,
       charging_hours: parseInt(formData.charging_hours),
       panel_wattage: parseInt(formData.panel_wattage)
     };
@@ -104,8 +104,8 @@ function App() {
     setFormData({
       load: '',
       backup_hours: '',
-      battery_eff: '',
-      battery_voltage: '',
+      battery_type: '',
+      inverter_voltage: '',
       charging_hours: '',
       panel_wattage: ''
     });

@@ -20,53 +20,31 @@ const Step2Backup = ({ data, onChange }) => {
         <span className="hint">Number of hours the system should provide power when there's no sunlight</span>
       </div>
      <div className="form-group">
-        <label>Battery Efficiency</label>
+        <label>Battery Type</label>
         <div className="radio-group">
-          <label className={`radio-option ${data.battery_eff === '0.75' ? 'selected' : ''}`}>
+          <label className={`radio-option ${data.battery_type === 'tubular' ? 'selected' : ''}`}>
             <input
               type="radio"
-              name="battery_eff"
-              value="0.75"
-              checked={data.battery_eff === '0.75'}
-              onChange={(e) => onChange({ battery_eff: e.target.value })}
+              name="battery_type"
+              value="tubular"
+              checked={data.battery_type === 'tubular'}
+              onChange={(e) => onChange({ battery_type: e.target.value })}
             />
-            <span className="radio-label">0.75</span>
+            <span className="radio-label">Tubular</span>
           </label>
           
-          <label className={`radio-option ${data.battery_eff === '0.8' ? 'selected' : ''}`}>
+          <label className={`radio-option ${data.battery_type === 'lithium' ? 'selected' : ''}`}>
             <input
               type="radio"
-              name="battery_eff"
-              value="0.8"
-              checked={data.battery_eff === '0.8'}
-              onChange={(e) => onChange({ battery_eff: e.target.value })}
+              name="battery_type"
+              value="lithium"
+              checked={data.battery_type === 'lithium'}
+              onChange={(e) => onChange({ battery_type: e.target.value })}
             />
-            <span className="radio-label">0.8</span>
-          </label>
-          
-          <label className={`radio-option ${data.battery_eff === '0.9' ? 'selected' : ''}`}>
-            <input
-              type="radio"
-              name="battery_eff"
-              value="0.9"
-              checked={data.battery_eff === '0.9'}
-              onChange={(e) => onChange({ battery_eff: e.target.value })}
-            />
-            <span className="radio-label">0.9</span>
-          </label>
-
-          <label className={`radio-option ${data.battery_eff === '1' ? 'selected' : ''}`}>
-            <input
-              type="radio"
-              name="battery_eff"
-              value="1"
-              checked={data.battery_eff === '1'}
-              onChange={(e) => onChange({ battery_eff: e.target.value })}
-            />
-            <span className="radio-label">1</span>
+            <span className="radio-label">Lithium</span>
           </label>
         </div>
-        <span className="hint">Higher voltage = lower current = thinner cables for same power</span>
+        <span className="hint">Lithium batteries are lighter, faster charging, and last longer than tubular</span>
       </div>
     </div>
   );

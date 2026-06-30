@@ -29,15 +29,15 @@ const Result = ({ results, isLoading, error, onReset, formData }) => {
     
     const load = formData?.load || results?.load || 'N/A';
     const backupHours = formData?.backup_hours || 'N/A';
-    const batteryEff = formData?.battery_eff || 'N/A';
-    const batteryVoltage = formData?.battery_voltage || 'N/A';
+    const batteryType = formData?.battery_type || 'N/A';
+    const inverterVoltage = formData?.inverter_voltage || 'N/A';
     const chargingHours = formData?.charging_hours || 'N/A';
     const panelWattage = formData?.panel_wattage || 'N/A';
     
     doc.text(`Total Load: ${load} W`, 25, 65);
     doc.text(`Backup Hours: ${backupHours} hours`, 25, 72);
-    doc.text(`Battery Efficiency: ${batteryEff}%`, 25, 79);
-    doc.text(`Battery Voltage: ${batteryVoltage} V`, 25, 86);
+    doc.text(`Battery Type: ${batteryType}`, 25, 79);
+    doc.text(`Inverter Voltage: ${inverterVoltage}`, 25, 86);
     doc.text(`Charging Hours: ${chargingHours} hours`, 25, 93);
     doc.text(`Panel Wattage: ${panelWattage} W`, 25, 100);
     
