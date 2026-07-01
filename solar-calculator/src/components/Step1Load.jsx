@@ -299,7 +299,6 @@ const Step1Load = ({ data, onChange, onNext }) => {
                         >
                           <span className="suggestion-name">{suggestion.name}</span>
                           <span className={`category-tag ${suggestion.category.toLowerCase()}`}>
-                            {suggestion.category} (×{suggestion.multiplier})
                           </span>
                         </div>
                       ))}
