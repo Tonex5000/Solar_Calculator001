@@ -6,7 +6,7 @@ const APPLIANCES_DATA = [
   // Inductive loads (Heavy motors) - Multiplier: 3
   { name: 'Air Conditioner', category: 'Inductive', multiplier: 3, wattage: '500 - 3,500 W' },
   { name: 'Refrigerator', category: 'Inductive', multiplier: 3, wattage: '100 - 800 W' },
-  { name: 'Washing Machine', category: 'Inuctive', multiplier: 3, wattage: '400 - 1,400 W' },
+  { name: 'Washing Machine', category: 'Inductive', multiplier: 3, wattage: '400 - 1,400 W' },
   { name: 'Ceiling Fan', category: 'Inductive', multiplier: 3, wattage: '50 - 100 W' },
   { name: 'Exhaust Fan', category: 'Inductive', multiplier: 3, wattage: '50 - 100 W' },
   { name: 'Vacuum Cleaner', category: 'Inductive', multiplier: 3, wattage: '500 - 1,200 W' },
