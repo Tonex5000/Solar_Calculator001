@@ -6,7 +6,7 @@ const APPLIANCES_DATA = [
   // Inductive loads (Heavy motors) - Multiplier: 3
   { name: 'Air Conditioner', category: 'Inductive', multiplier: 3, wattage: '500 - 3,500 W' },
   { name: 'Refrigerator', category: 'Inductive', multiplier: 3, wattage: '100 - 800 W' },
-  { name: 'Washing Machine', category: 'Inductive', multiplier: 3, wattage: '400 - 1,400 W' },
+  { name: 'Washing Machine', category: 'Inuctive', multiplier: 3, wattage: '400 - 1,400 W' },
   { name: 'Ceiling Fan', category: 'Inductive', multiplier: 3, wattage: '50 - 100 W' },
   { name: 'Exhaust Fan', category: 'Inductive', multiplier: 3, wattage: '50 - 100 W' },
   { name: 'Vacuum Cleaner', category: 'Inductive', multiplier: 3, wattage: '500 - 1,200 W' },
@@ -32,39 +32,23 @@ const APPLIANCES_DATA = [
   { name: 'Phone Charger', category: 'Nonlinear', multiplier: 1, wattage: '5 - 25 W' },
 ];
 
-// Inverter tiers for load meter
+// Inverter tiers for load meter - extended to 50kVA
 const TIERS = [
   { kva: 1, watts: 800 },
   { kva: 2, watts: 1600 },
   { kva: 3.5, watts: 2800 },
   { kva: 5, watts: 4000 },
+  { kva: 7.5, watts: 6000 },
+  { kva: 10, watts: 8000 },
+  { kva: 15, watts: 12000 },
+  { kva: 20, watts: 16000 },
+  { kva: 25, watts: 20000 },
+  { kva: 30, watts: 24000 },
+  { kva: 40, watts: 32000 },
+  { kva: 50, watts: 40000 },
 ];
 
 const TOTAL_SEGMENTS = 20;
-const MAX_SCALE_WATTS = TIERS[TIERS.length - 1].watts;
-
-function getRecommendation(watts) {
-  const fitTier = TIERS.find((t) => watts <= t.watts);
-
-  if (!fitTier) {
-    const top = TIERS[TIERS.length - 1];
-    return {
-      status: 'overloaded',
-      tier: null,
-      topTier: top.kva,
-      headroom: watts - top.watts,
-    };
-  }
-
-  const headroom = fitTier.watts - watts;
-  const utilisation = watts / fitTier.watts;
-
-  if (utilisation > 0.9) {
-    return { status: 'tight', tier: fitTier.kva, headroom };
-  }
-
-  return { status: 'comfortable', tier: fitTier.kva, headroom };
-}
 
 const Step1Load = ({ data, onChange, onNext }) => {
   const [appliances, setAppliances] = useState(
@@ -217,21 +201,17 @@ const Step1Load = ({ data, onChange, onNext }) => {
   const { total } = calculateTotalLoad();
 
   // Load meter calculations
-  const recommendation = useMemo(() => getRecommendation(total), [total]);
+  const recommendedTier = useMemo(() => {
+    return TIERS.find((t) => total <= t.watts) || TIERS[TIERS.length - 1];
+  }, [total]);
 
   const litSegments = useMemo(() => {
-    const ratio = Math.min(total / MAX_SCALE_WATTS, 1);
+    const maxWatts = TIERS[TIERS.length - 1].watts;
+    const ratio = Math.min(total / maxWatts, 1);
     return Math.round(ratio * TOTAL_SEGMENTS);
   }, [total]);
 
-  const overloaded = recommendation.status === 'overloaded';
-  const tight = recommendation.status === 'tight';
-
-  const litColor = overloaded
-    ? '#ef4444'
-    : tight
-    ? '#f59e0b'
-    : '#22c55e';
+  const isOverCapacity = total > TIERS[TIERS.length - 1].watts;
 
   return (
     <div className="step-content">
@@ -243,8 +223,8 @@ const Step1Load = ({ data, onChange, onNext }) => {
         <div className="load-meter">
           <div className="load-meter-header">
             <span>Total Connected Load</span>
-            <span className="watt-display" style={{ color: litColor }}>
-              {String(Math.round(total)).padStart(4, '0')}
+            <span className="watt-display" style={{ color: isOverCapacity ? '#ef4444' : '#667eea' }}>
+              {total.toLocaleString()}
               <span className="watt-unit">W</span>
             </span>
           </div>
@@ -255,7 +235,7 @@ const Step1Load = ({ data, onChange, onNext }) => {
                 key={i}
                 className={`gauge-segment ${i < litSegments ? 'lit' : ''}`}
                 style={{
-                  background: i < litSegments ? litColor : 'rgba(255,255,255,0.1)',
+                  background: i < litSegments ? (isOverCapacity ? '#ef4444' : '#667eea') : 'rgba(255,255,255,0.1)',
                 }}
               />
             ))}
@@ -265,28 +245,19 @@ const Step1Load = ({ data, onChange, onNext }) => {
             {TIERS.map((t) => (
               <span
                 key={t.kva}
-                className={recommendation.tier === t.kva ? 'active' : ''}
+                className={recommendedTier.kva === t.kva ? 'active' : ''}
               >
                 {t.kva}kVA
               </span>
             ))}
           </div>
 
-          <div className="recommendation">
-            {recommendation.status === 'overloaded' && (
-              <>
-                <b style={{ color: '#ef4444' }}>Over capacity</b> — exceeds the largest inverter ({recommendation.topTier}kVA) by {Math.round(recommendation.headroom)}W. Consider splitting load or custom setup.
-              </>
-            )}
-            {recommendation.status === 'tight' && (
-              <>
-                <b style={{ color: '#f59e0b' }}>{recommendation.tier}kVA inverter</b> — only {Math.round(recommendation.headroom)}W headroom. Consider next tier if adding appliances.
-              </>
-            )}
-            {recommendation.status === 'comfortable' && (
-              <>
-                Fits <b style={{ color: '#22c55e' }}>{recommendation.tier}kVA inverter</b> — {Math.round(recommendation.headroom)}W headroom before next tier.
-              </>
+          <div className="load-meter-footer">
+            <span className="recommended-inverter">
+              Recommended Inverter: <strong>{recommendedTier.kva} kVA</strong>
+            </span>
+            {isOverCapacity && (
+              <span className="over-capacity-warning">Exceeds 50kVA - Custom setup required</span>
             )}
           </div>
         </div>
@@ -415,7 +386,7 @@ const Step1Load = ({ data, onChange, onNext }) => {
         onClick={handleSubmit}
         disabled={total === 0}
       >
-        Submit Load ({total > 0 ? `${total} W` : '0 W'})
+        Submit Load ({total > 0 ? `${total.toLocaleString()} W` : '0 W'})
       </button>
     </div>
   );

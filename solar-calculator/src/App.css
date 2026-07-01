@@ -724,23 +724,41 @@ select:focus {
 .tier-labels {
   display: flex;
   justify-content: space-between;
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   color: #666;
   margin-bottom: 12px;
   font-family: 'Courier New', monospace;
+  flex-wrap: wrap;
+  gap: 2px;
 }
 
 .tier-labels span.active {
-  color: #fff;
+  color: #667eea;
   font-weight: 700;
 }
 
-.recommendation {
-  font-size: 0.9rem;
-  color: #ccc;
-  line-height: 1.5;
+.load-meter-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.85rem;
   padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.recommended-inverter {
+  color: #ccc;
+}
+
+.recommended-inverter strong {
+  color: #667eea;
+}
+
+.over-capacity-warning {
+  color: #ef4444;
+  font-weight: 600;
 }
 
 /* Result Container Styles */
