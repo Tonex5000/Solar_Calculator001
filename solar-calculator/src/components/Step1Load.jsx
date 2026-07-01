@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 
 // Appliance data from PDF with categorized load types
 // Rules: "Nonlinear + Resistive" = Resistive, "Resistive + Inductive" = Inductive, "Inductive + Nonlinear" = Inductive
@@ -31,6 +31,40 @@ const APPLIANCES_DATA = [
   { name: 'Laptop', category: 'Nonlinear', multiplier: 1, wattage: '50 - 300 W' },
   { name: 'Phone Charger', category: 'Nonlinear', multiplier: 1, wattage: '5 - 25 W' },
 ];
+
+// Inverter tiers for load meter
+const TIERS = [
+  { kva: 1, watts: 800 },
+  { kva: 2, watts: 1600 },
+  { kva: 3.5, watts: 2800 },
+  { kva: 5, watts: 4000 },
+];
+
+const TOTAL_SEGMENTS = 20;
+const MAX_SCALE_WATTS = TIERS[TIERS.length - 1].watts;
+
+function getRecommendation(watts) {
+  const fitTier = TIERS.find((t) => watts <= t.watts);
+
+  if (!fitTier) {
+    const top = TIERS[TIERS.length - 1];
+    return {
+      status: 'overloaded',
+      tier: null,
+      topTier: top.kva,
+      headroom: watts - top.watts,
+    };
+  }
+
+  const headroom = fitTier.watts - watts;
+  const utilisation = watts / fitTier.watts;
+
+  if (utilisation > 0.9) {
+    return { status: 'tight', tier: fitTier.kva, headroom };
+  }
+
+  return { status: 'comfortable', tier: fitTier.kva, headroom };
+}
 
 const Step1Load = ({ data, onChange, onNext }) => {
   const [appliances, setAppliances] = useState(
@@ -182,10 +216,81 @@ const Step1Load = ({ data, onChange, onNext }) => {
 
   const { total } = calculateTotalLoad();
 
+  // Load meter calculations
+  const recommendation = useMemo(() => getRecommendation(total), [total]);
+
+  const litSegments = useMemo(() => {
+    const ratio = Math.min(total / MAX_SCALE_WATTS, 1);
+    return Math.round(ratio * TOTAL_SEGMENTS);
+  }, [total]);
+
+  const overloaded = recommendation.status === 'overloaded';
+  const tight = recommendation.status === 'tight';
+
+  const litColor = overloaded
+    ? '#ef4444'
+    : tight
+    ? '#f59e0b'
+    : '#22c55e';
+
   return (
     <div className="step-content">
       <h2>Step 1: Load</h2>
       <p className="step-description">Search and select appliances to calculate your power load</p>
+
+      {/* Load Meter */}
+      {total > 0 && (
+        <div className="load-meter">
+          <div className="load-meter-header">
+            <span>Total Connected Load</span>
+            <span className="watt-display" style={{ color: litColor }}>
+              {String(Math.round(total)).padStart(4, '0')}
+              <span className="watt-unit">W</span>
+            </span>
+          </div>
+
+          <div className="gauge">
+            {Array.from({ length: TOTAL_SEGMENTS }).map((_, i) => (
+              <div
+                key={i}
+                className={`gauge-segment ${i < litSegments ? 'lit' : ''}`}
+                style={{
+                  background: i < litSegments ? litColor : 'rgba(255,255,255,0.1)',
+                }}
+              />
+            ))}
+          </div>
+
+          <div className="tier-labels">
+            {TIERS.map((t) => (
+              <span
+                key={t.kva}
+                className={recommendation.tier === t.kva ? 'active' : ''}
+              >
+                {t.kva}kVA
+              </span>
+            ))}
+          </div>
+
+          <div className="recommendation">
+            {recommendation.status === 'overloaded' && (
+              <>
+                <b style={{ color: '#ef4444' }}>Over capacity</b> — exceeds the largest inverter ({recommendation.topTier}kVA) by {Math.round(recommendation.headroom)}W. Consider splitting load or custom setup.
+              </>
+            )}
+            {recommendation.status === 'tight' && (
+              <>
+                <b style={{ color: '#f59e0b' }}>{recommendation.tier}kVA inverter</b> — only {Math.round(recommendation.headroom)}W headroom. Consider next tier if adding appliances.
+              </>
+            )}
+            {recommendation.status === 'comfortable' && (
+              <>
+                Fits <b style={{ color: '#22c55e' }}>{recommendation.tier}kVA inverter</b> — {Math.round(recommendation.headroom)}W headroom before next tier.
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Main Appliance Card */}
       <div className="appliance-card">
