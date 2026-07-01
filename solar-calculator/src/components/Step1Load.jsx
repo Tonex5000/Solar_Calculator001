@@ -364,14 +364,7 @@ const Step1Load = ({ data, onChange, onNext }) => {
             )}
 
             {/* Calculation Preview */}
-            {app.selectedAppliance && app.wattage && app.quantity && (
-              <div className="calculation-preview">
-                {app.quantity} × {app.wattage} × {app.selectedAppliance.multiplier} ={' '}
-                <strong>
-                  {app.quantity * parseFloat(app.wattage) * app.selectedAppliance.multiplier} W
-                </strong>
-              </div>
-            )}
+
           </div>
         ))}
       </div>
