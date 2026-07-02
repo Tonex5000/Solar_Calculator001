@@ -46,6 +46,49 @@ body {
   opacity: 0.9;
 }
 
+.debug-toggle {
+  margin-top: 8px;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  color: white;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.debug-toggle:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.debug-panel {
+  margin-top: 4px;
+  padding: 8px 12px;
+  background: rgba(102, 126, 234, 0.1);
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: #667eea;
+}
+
+.debug-item {
+  margin-bottom: 4px;
+}
+
+.debug-item:last-child {
+  margin-bottom: 0;
+}
+
+.debug-label {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.debug-value {
+  color: #333;
+}
+
 .chat-messages {
   flex: 1;
   overflow-y: auto;

@@ -8,6 +8,7 @@ function Chat() {
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [showDebug, setShowDebug] = useState(false)
 
   const handleSend = async () => {
     if (!inputValue.trim() || isLoading) return
@@ -39,10 +40,20 @@ function Chat() {
 
       const data = await response.json()
 
+      // Log structured data to console for debugging
+      console.log('Intent Detection:', {
+        intent: data.intent,
+        intent_label: data.intent_label,
+        extracted_data: data.data
+      })
+
       const assistantMessage = {
         role: 'assistant',
         content: data.reply,
-        timestamp: new Date().toLocaleTimeString()
+        timestamp: new Date().toLocaleTimeString(),
+        intent: data.intent,
+        intent_label: data.intent_label,
+        extractedData: data.data
       }
 
       setMessages(prev => [...prev, assistantMessage])
@@ -69,11 +80,42 @@ function Chat() {
     }
   }
 
+  const formatExtractedData = (data) => {
+    if (!data) return null
+    
+    const items = []
+    
+    if (data.budget) {
+      items.push(`💰 Budget: ₦${data.budget.toLocaleString()}`)
+    }
+    
+    if (data.appliances && data.appliances.length > 0) {
+      items.push(`🔌 Appliances: ${data.appliances.join(', ')}`)
+    }
+    
+    if (data.problem) {
+      items.push(`⚠️ Problem: ${data.problem}`)
+    }
+    
+    if (data.comparison) {
+      items.push(`📊 Comparing: ${data.comparison}`)
+    }
+    
+    return items.length > 0 ? items.join(' | ') : null
+  }
+
   return (
     <div className="chat-container">
       <div className="chat-header">
         <h1>☀️ AI Solar Assistant</h1>
         <p>Ask me anything about solar energy in Nigeria</p>
+        <button 
+          className="debug-toggle"
+          onClick={() => setShowDebug(!showDebug)}
+          title="Toggle debug panel"
+        >
+          {showDebug ? '🐛 Hide Debug' : '🐛 Show Debug'}
+        </button>
       </div>
 
       <div className="chat-messages">
@@ -88,18 +130,34 @@ function Chat() {
             <div style={{ marginTop: '12px', fontSize: '0.9rem', textAlign: 'left', maxWidth: '300px', margin: '12px auto 0' }}>
               <p>• "What inverter do I need for a 3 bedroom flat?"</p>
               <p>• "How much does a solar system cost?"</p>
-              <p>• "Why is my inverter making noise?"</p>
+              <p>• "I have ₦500k, what can I power?"</p>
+              <p>• "My battery is draining fast"</p>
             </div>
           </div>
         )}
 
         {messages.map((msg, index) => (
-          <div 
-            key={index} 
-            className={`message ${msg.role} ${msg.isError ? 'error' : ''}`}
-          >
-            <div>{msg.content}</div>
-            <div className="message-time">{msg.timestamp}</div>
+          <div key={index}>
+            <div className={`message ${msg.role} ${msg.isError ? 'error' : ''}`}>
+              <div>{msg.content}</div>
+              <div className="message-time">{msg.timestamp}</div>
+            </div>
+            
+            {/* Show intent detection for assistant messages */}
+            {msg.role === 'assistant' && !msg.isError && showDebug && msg.intent && (
+              <div className="debug-panel">
+                <div className="debug-item">
+                  <span className="debug-label">🎯 Intent:</span>
+                  <span className="debug-value">{msg.intent_label}</span>
+                </div>
+                {formatExtractedData(msg.extractedData) && (
+                  <div className="debug-item">
+                    <span className="debug-label">📋 Extracted Data:</span>
+                    <span className="debug-value">{formatExtractedData(msg.extractedData)}</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ))}
 
@@ -110,7 +168,7 @@ function Chat() {
               <div className="loading-dot"></div>
               <div className="loading-dot"></div>
             </div>
-            <span>Thinking...</span>
+            <span>Analyzing intent...</span>
           </div>
         )}
       </div>
