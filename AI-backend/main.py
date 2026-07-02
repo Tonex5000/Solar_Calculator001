@@ -14,10 +14,10 @@ load_dotenv()
 
 app = FastAPI(title="AI Solar Assistant", version="1.0.0")
 
-# CORS middleware - allow frontend access
+# CORS middleware - allow frontend access from all origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development
+    allow_origin_regex=r"https?://(www\.)?.*",  # Allow all HTTP/HTTPS origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
