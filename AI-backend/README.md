@@ -21,7 +21,7 @@ GROQ_API_KEY=your_actual_api_key_here
 
 4. Run the server:
 ```bash
-uvicorn main:app --reload
+python -m uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 The server will start at `http://localhost:8000`
