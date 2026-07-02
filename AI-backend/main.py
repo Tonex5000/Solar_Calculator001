@@ -1,13 +1,13 @@
 """
 AI Solar Assistant Backend
-FastAPI server for Nigerian Solar Expert AI
+FastAPI server for Nigerian Solar Expert AI using Groq
 """
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
-import openai
+from groq import Groq
 import os
 
 load_dotenv()
@@ -23,8 +23,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize OpenAI client
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Initialize Groq client
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # System prompt for Nigerian Solar Expert
 SYSTEM_PROMPT = """You are a friendly and knowledgeable Nigerian solar energy expert assistant. 
@@ -46,6 +46,7 @@ Your approach:
 - Suggest realistic solutions for Nigerian homes and businesses
 
 Always respond in a helpful, conversational tone as if you're advising a friend."""
+
 class ChatRequest(BaseModel):
     message: str
 
@@ -71,15 +72,15 @@ async def chat(request: ChatRequest):
     if not request.message.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
     
-    if not os.getenv("OPENAI_API_KEY"):
+    if not os.getenv("GROQ_API_KEY"):
         raise HTTPException(
             status_code=500, 
-            detail="OpenAI API key not configured. Please set OPENAI_API_KEY in .env"
+            detail="Groq API key not configured. Please set GROQ_API_KEY in .env"
         )
     
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
+        chat_completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": request.message}
@@ -88,14 +89,8 @@ async def chat(request: ChatRequest):
             temperature=0.7
         )
         
-        reply = response.choices[0].message.content
+        reply = chat_completion.choices[0].message.content
         return ChatResponse(reply=reply)
-    
-    except openai.AuthenticationError:
-        raise HTTPException(status_code=401, detail="Invalid OpenAI API key")
-    
-    except openai.RateLimitError:
-        raise HTTPException(status_code=429, detail="OpenAI rate limit exceeded")
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")

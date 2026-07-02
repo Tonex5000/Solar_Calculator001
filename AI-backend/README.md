@@ -1,6 +1,6 @@
 # AI Backend - Solar Assistant
 
-FastAPI backend for the AI-powered Nigerian Solar Assistant.
+FastAPI backend for the AI-powered Nigerian Solar Assistant using Groq API.
 
 ## Setup
 
@@ -14,9 +14,9 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-3. Add your OpenAI API key to `.env`:
+3. Add your Groq API key to `.env`:
 ```
-OPENAI_API_KEY=your_actual_api_key_here
+GROQ_API_KEY=your_actual_api_key_here
 ```
 
 4. Run the server:
@@ -57,3 +57,7 @@ The AI acts as a Nigerian solar energy expert who:
 - Is cost-conscious (thinks in ₦)
 - Gives practical, simple explanations
 - Thinks like a local solar installer
+
+## Model
+
+Uses `llama-3.3-70b-versatile` from Groq API for fast, intelligent responses.
