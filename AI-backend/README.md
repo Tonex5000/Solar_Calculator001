@@ -6,7 +6,8 @@ FastAPI backend for the AI-powered Nigerian Solar Assistant using Groq API.
 
 1. Install dependencies:
 ```bash
-pip install -r requirements.txt
+pip install --upgrade pip
+pip install fastapi "uvicorn[standard]" groq python-dotenv
 ```
 
 2. Create a `.env` file:
