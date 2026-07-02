@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
-// API URL - change this to match your backend URL
-const API_URL = 'http://localhost:8000'
+// API URL - Backend server
+const API_URL = 'https://solar-calculator001-3-5qgs.onrender.com'
 
 function Chat() {
   const [messages, setMessages] = useState([])
