@@ -133,6 +133,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def custom_round(number):
+    whole = int(number)
+    decimal = number - whole
+
+    if decimal < 0.5:
+        return whole
+    elif decimal => 0.5:
+        return whole + 1
+
 
 @app.get("/", tags=["Health"])
 async def root() -> dict[str, str]:
@@ -214,7 +223,7 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
     # Calculate battery connections based on battery type
     if battery_type == "tubular":
         # Parallel connection = total_battery_ah / (switching_volt * 220)
-        parallel_connection = ceil(total_battery_ah / (switching_volt * 220))
+        parallel_connection = custom_round(total_battery_ah / (switching_volt * 220))
         parallel_connection = max(parallel_connection, 1)  # Minimum 1
 
         # Total battery count = series × parallel
