@@ -76,7 +76,7 @@ function App() {
     };
 
     try {
-      const response = await fetch('https://solar-back-2.onrender.com/calculate', {
+      const response = await fetch('https://solar-calculator001-7.onrender.com/calculate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
