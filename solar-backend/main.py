@@ -247,6 +247,7 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
         battery_type=battery_type,
         series_connection=series_connection,
         parallel_connection=parallel_connection,
+        battery_cap=battery_cap,
     )
 
 
