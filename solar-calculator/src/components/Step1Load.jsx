@@ -189,22 +189,27 @@ const Step1Load = ({ data, onChange, onNext }) => {
     return { total, details: applianceDetails };
   };
 
-  const handleSubmit = () => {
-    const { total, details } = calculateTotalLoad();
-    onChange({
-      load: total.toString(),
-      appliances: appliances,
-      applianceDetails: details,
-    });
-    onNext();
-  };
-
   const { total } = calculateTotalLoad();
 
   // Load meter calculations
   const recommendedTier = useMemo(() => {
     return TIERS.find((t) => total <= t.watts) || TIERS[TIERS.length - 1];
   }, [total]);
+
+  const handleSubmit = () => {
+    const { total, details } = calculateTotalLoad();
+    // Parse the voltage from the recommended tier (e.g., "12V" -> 12, "180V / 240V" -> 180)
+    const switchingVoltStr = recommendedTier.voltage;
+    const switchingVolt = parseInt(switchingVoltStr.split('/')[0].replace('V', '').trim());
+    
+    onChange({
+      load: total.toString(),
+      switching_volt: switchingVolt,
+      appliances: appliances,
+      applianceDetails: details,
+    });
+    onNext();
+  };
 
   const litSegments = useMemo(() => {
     const maxWatts = TIERS[TIERS.length - 1].watts;

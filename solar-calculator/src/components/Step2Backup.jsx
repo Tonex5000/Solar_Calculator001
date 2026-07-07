@@ -63,27 +63,6 @@ const Step2Backup = ({ data, onChange }) => {
         </select>
         <span className="hint">Higher voltage systems are more efficient for larger loads</span>
       </div>
-
-      <div className="form-group">
-        <label htmlFor="switching_volt">Switching Volt (Inverter Voltage)</label>
-        <select
-          id="switching_volt"
-          name="switching_volt"
-          value={data.switching_volt || ''}
-          onChange={(e) => onChange({ switching_volt: parseInt(e.target.value) })}
-        >
-          <option value="">Select switching volt...</option>
-          <option value="12">12V</option>
-          <option value="24">24V</option>
-          <option value="48">48V</option>
-          <option value="96">96V</option>
-          <option value="120">120V</option>
-          <option value="180">180V</option>
-          <option value="240">240V</option>
-          <option value="360">360V</option>
-        </select>
-        <span className="hint">Based on your recommended inverter size from Step 1</span>
-      </div>
     </div>
   );
 };

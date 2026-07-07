@@ -12,11 +12,11 @@ function App() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     load: '',
+    switching_volt: '',
     backup_hours: '',
     battery_type: '',
     battery_eff: '',
     battery_voltage: '',
-    switching_volt: '',
     charging_hours: '',
     panel_wattage: ''
   });
@@ -37,8 +37,7 @@ function App() {
                parseFloat(formData.backup_hours) >= 1 && 
                parseFloat(formData.backup_hours) <= 12 &&
                formData.battery_type !== '' &&
-               formData.battery_voltage !== '' &&
-               formData.switching_volt !== '';
+               formData.battery_voltage !== '';
       case 3:
         return formData.charging_hours && 
                parseFloat(formData.charging_hours) >= 1 && 
@@ -106,11 +105,11 @@ function App() {
     setCurrentStep(1);
     setFormData({
       load: '',
+      switching_volt: '',
       backup_hours: '',
       battery_type: '',
       battery_eff: '',
       battery_voltage: '',
-      switching_volt: '',
       charging_hours: '',
       panel_wattage: ''
     });
