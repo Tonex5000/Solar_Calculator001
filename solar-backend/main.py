@@ -173,7 +173,7 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
     load = input_data.load
     backup_hours = input_data.backup_hours
     battery_type = input_data.battery_type
-    battery_eff = input_data.battery_eff
+    battery_eff = 0.8
     switching_volt = input_data.switching_volt
     charging_hours = input_data.charging_hours
     panel_wattage = input_data.panel_wattage
@@ -189,13 +189,13 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
     energy_wh = load * backup_hours
 
     # Apply system loss factor (based on battery efficiency)
-    energy_wh_adjusted = energy_wh * battery_eff
+    battery_cap = switching_volt * 220
 
     # Calculate total battery capacity needed in Ah (using switching_volt as system voltage)
-    total_battery_ah = energy_wh / 0.8
+    battery_ah = energy_wh / 0.8
 
     # Calculate battery capacity in Ah
-    battery_ah = ceil(total_battery_ah)
+    #battery_ah = ceil(total_battery_ah)
 
     # Calculate inverter size (with 100% headroom for surge capacity)
     # Convert to kVA (assuming power factor of 0.8)
@@ -203,13 +203,13 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
     inverter_kva = inverter_watts / 1000
 
     # Calculate solar array size using adjusted energy
-    solar_watts = energy_wh_adjusted / charging_hours
+    solar_watts = battery_cap / charging_hours
 
     # Calculate number of panels (round up)
     number_of_panels = ceil(solar_watts / panel_wattage)
 
     # Calculate series connection = switching_volt / 12V (per battery)
-    series_connection = ceil(switching_volt / BATTERY_RATED_VOLTAGE)
+    series_connection = ceil(switching volt / 12)
 
     # Calculate battery connections based on battery type
     if battery_type == "tubular":
