@@ -3,7 +3,7 @@ Solar System Sizing Calculator API
 
 A FastAPI backend for calculating solar system components based on load requirements.
 """
-
+import math
 from math import ceil
 from typing import Literal
 
@@ -187,6 +187,18 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
         else:
             return whole + 1
 
+
+    def add_if_prime(n):
+      if n < 2:
+        return n
+
+      for i in range(2, int(math.sqrt(n)) + 1):
+        if n % i == 0:
+            return n  # Not prime
+
+      return n + 1:
+     
+
     # Validate charging hours is not zero
     if charging_hours <= 0:
         raise HTTPException(
@@ -215,7 +227,7 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
     solar_watts = battery_cap / charging_hours
 
     # Calculate number of panels (round up)
-    number_of_panels = ceil(solar_watts / panel_wattage)
+    number_of_panels = add_if_prime(custom_round(solar_watts / panel_wattage)) 
 
     # Calculate series connection = switching_volt / 12V (per battery)
     series_connection = switching_volt / 12
