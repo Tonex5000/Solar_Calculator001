@@ -21,31 +21,31 @@ const Step2Backup = ({ data, onChange }) => {
       </div>
 
       <div className="form-group">
-        <label>Battery Efficiency</label>
+        <label>Battery Type</label>
         <div className="radio-group">
-          <label className={`radio-option ${data.battery_eff === 0.8 ? 'selected' : ''}`}>
+          <label className={`radio-option ${data.battery_type === 'tubular' ? 'selected' : ''}`}>
             <input
               type="radio"
-              name="battery_eff"
-              value="0.8"
-              checked={data.battery_eff === 0.8}
-              onChange={(e) => onChange({ battery_eff: parseFloat(e.target.value) })}
+              name="battery_type"
+              value="tubular"
+              checked={data.battery_type === 'tubular'}
+              onChange={(e) => onChange({ battery_eff: 0.8, battery_type: e.target.value })}
             />
-            <span className="radio-label">80% (Lead Acid)</span>
+            <span className="radio-label">Tubular (Lead Acid)</span>
           </label>
           
-          <label className={`radio-option ${data.battery_eff === 0.95 ? 'selected' : ''}`}>
+          <label className={`radio-option ${data.battery_type === 'lithium' ? 'selected' : ''}`}>
             <input
               type="radio"
-              name="battery_eff"
-              value="0.95"
-              checked={data.battery_eff === 0.95}
-              onChange={(e) => onChange({ battery_eff: parseFloat(e.target.value) })}
+              name="battery_type"
+              value="lithium"
+              checked={data.battery_type === 'lithium'}
+              onChange={(e) => onChange({ battery_eff: 0.95, battery_type: e.target.value })}
             />
-            <span className="radio-label">95% (Lithium)</span>
+            <span className="radio-label">Lithium</span>
           </label>
         </div>
-        <span className="hint">Lithium batteries have higher efficiency than lead acid</span>
+        <span className="hint">Lithium batteries are lighter, faster charging, and last longer than tubular</span>
       </div>
 
       <div className="form-group">
@@ -62,6 +62,27 @@ const Step2Backup = ({ data, onChange }) => {
           <option value="48">48V (Large Systems)</option>
         </select>
         <span className="hint">Higher voltage systems are more efficient for larger loads</span>
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="switching_volt">Switching Volt (Inverter Voltage)</label>
+        <select
+          id="switching_volt"
+          name="switching_volt"
+          value={data.switching_volt || ''}
+          onChange={(e) => onChange({ switching_volt: parseInt(e.target.value) })}
+        >
+          <option value="">Select switching volt...</option>
+          <option value="12">12V</option>
+          <option value="24">24V</option>
+          <option value="48">48V</option>
+          <option value="96">96V</option>
+          <option value="120">120V</option>
+          <option value="180">180V</option>
+          <option value="240">240V</option>
+          <option value="360">360V</option>
+        </select>
+        <span className="hint">Based on your recommended inverter size from Step 1</span>
       </div>
     </div>
   );
