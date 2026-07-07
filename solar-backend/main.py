@@ -218,7 +218,7 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
     number_of_panels = ceil(solar_watts / panel_wattage)
 
     # Calculate series connection = switching_volt / 12V (per battery)
-    series_connection = ceil(switching volt / 12)
+    series_connection = switching_volt / 12
 
     # Calculate battery connections based on battery type
     if battery_type == "tubular":
