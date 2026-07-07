@@ -32,20 +32,21 @@ const APPLIANCES_DATA = [
   { name: 'Phone Charger', category: 'Nonlinear', multiplier: 1, wattage: '5 - 25 W' },
 ];
 
-// Inverter tiers for load meter - extended to 50kVA
+// Inverter tiers for load meter - extended to 50kVA with system voltage
+// Voltage based on standard inverter sizing chart
 const TIERS = [
-  { kva: 1, watts: 800 },
-  { kva: 2, watts: 1600 },
-  { kva: 3.5, watts: 2800 },
-  { kva: 5, watts: 4000 },
-  { kva: 7.5, watts: 6000 },
-  { kva: 10, watts: 8000 },
-  { kva: 15, watts: 12000 },
-  { kva: 20, watts: 16000 },
-  { kva: 25, watts: 20000 },
-  { kva: 30, watts: 24000 },
-  { kva: 40, watts: 32000 },
-  { kva: 50, watts: 40000 },
+  { kva: 1, watts: 800, voltage: '12V' },
+  { kva: 2, watts: 1600, voltage: '24V' },
+  { kva: 3.5, watts: 2800, voltage: '24V' },
+  { kva: 5, watts: 4000, voltage: '48V' },
+  { kva: 7.5, watts: 6000, voltage: '96V' },
+  { kva: 10, watts: 8000, voltage: '120V' },
+  { kva: 15, watts: 12000, voltage: '180V / 240V' },
+  { kva: 20, watts: 16000, voltage: '360V' },
+  { kva: 25, watts: 20000, voltage: '360V' },
+  { kva: 30, watts: 24000, voltage: '360V' },
+  { kva: 40, watts: 32000, voltage: '360V' },
+  { kva: 50, watts: 40000, voltage: '360V' },
 ];
 
 const TOTAL_SEGMENTS = 20;
@@ -247,14 +248,14 @@ const Step1Load = ({ data, onChange, onNext }) => {
                 key={t.kva}
                 className={recommendedTier.kva === t.kva ? 'active' : ''}
               >
-                {t.kva}kVA
+                {t.kva}kVA ({t.voltage})
               </span>
             ))}
           </div>
 
           <div className="load-meter-footer">
             <span className="recommended-inverter">
-              Recommended Inverter: <strong>{recommendedTier.kva} kVA</strong>
+              Recommended Inverter: <strong>{recommendedTier.kva} kVA</strong> | System Voltage: <strong>{recommendedTier.voltage}</strong>
             </span>
             {isOverCapacity && (
               <span className="over-capacity-warning">Exceeds 50kVA - Custom setup required</span>
