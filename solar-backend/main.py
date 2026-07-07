@@ -9,10 +9,9 @@ from typing import Literal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 # Constants
-VALID_BATTERY_VOLTAGES = [12, 24, 48]
 BATTERY_RATED_VOLTAGE = 12  # 12V batteries for battery count estimation
 BATTERY_RATED_CAPACITY = 200  # 200Ah batteries
 
@@ -42,13 +41,8 @@ class SolarCalculationInput(BaseModel):
         ...,
         ge=0.75,
         le=1,
-        description="Tells us the efficiency of the battery",
+        description="Battery efficiency (0.8 for tubular, 0.95 for lithium)",
         examples=[0.8, 0.95],
-    )
-    battery_voltage: Literal[12, 24, 48] = Field(
-        ...,
-        description="System voltage (12, 24, or 48)",
-        examples=[24, 48],
     )
     switching_volt: int = Field(
         ...,
@@ -69,13 +63,6 @@ class SolarCalculationInput(BaseModel):
         description="Wattage of a single solar panel (e.g., 300, 400, 550)",
         examples=[400, 550],
     )
-
-    @field_validator("battery_voltage")
-    @classmethod
-    def validate_battery_voltage(cls, v: int) -> int:
-        if v not in VALID_BATTERY_VOLTAGES:
-            raise ValueError(f"Battery voltage must be one of {VALID_BATTERY_VOLTAGES}")
-        return v
 
 
 class SolarCalculationOutput(BaseModel):
@@ -166,19 +153,20 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
 
     Performs the following calculations:
     1. Energy required (Wh) = load (W) × backup_hours
-    2. Battery capacity (Ah) = energy (Wh) / battery_voltage (V)
-    3. Inverter size (W) = load × 1.25 (25% headroom)
+    2. Battery capacity (Ah) = energy (Wh) / switching_volt (V)
+    3. Inverter size (W) = load × 2 / battery_eff
     4. Solar size (W) = adjusted_energy (Wh) / charging_hours
     5. Number of panels = ceil(solar_watts / panel_wattage)
 
     For TUBULAR batteries:
-    - Series connection = switching_volt / battery_voltage (12V per battery)
-    - Parallel connection = total_battery_capacity / (switching_volt × 220)
+    - Series connection = switching_volt / 12V (per battery)
+    - Parallel connection = total_battery_ah / (switching_volt × 220)
     - Battery count = series_connection × parallel_connection
 
     For LITHIUM batteries:
-    - Standard battery count calculation
-    - Series/Parallel connections = 1 (single unit or configured pack)
+    - Series connection = switching_volt / 12V
+    - Parallel connection = total_battery_ah / BATTERY_RATED_CAPACITY
+    - Battery count = series × parallel
     """
 
     # Extract validated inputs
@@ -186,7 +174,6 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
     backup_hours = input_data.backup_hours
     battery_type = input_data.battery_type
     battery_eff = input_data.battery_eff
-    battery_voltage = input_data.battery_voltage
     switching_volt = input_data.switching_volt
     charging_hours = input_data.charging_hours
     panel_wattage = input_data.panel_wattage
@@ -204,13 +191,13 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
     # Apply system loss factor (based on battery efficiency)
     energy_wh_adjusted = energy_wh * battery_eff
 
-    # Calculate total battery capacity needed in Ah
-    total_battery_ah = energy_wh_adjusted / battery_voltage
+    # Calculate total battery capacity needed in Ah (using switching_volt as system voltage)
+    total_battery_ah = energy_wh_adjusted / switching_volt
 
     # Calculate battery capacity in Ah
     battery_ah = ceil(total_battery_ah)
 
-    # Calculate inverter size (with 25% headroom for surge capacity)
+    # Calculate inverter size (with 100% headroom for surge capacity)
     # Convert to kVA (assuming power factor of 0.8)
     inverter_watts = (load * 2) / battery_eff
     inverter_kva = inverter_watts / 1000
@@ -221,24 +208,22 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
     # Calculate number of panels (round up)
     number_of_panels = ceil(solar_watts / panel_wattage)
 
+    # Calculate series connection = switching_volt / 12V (per battery)
+    series_connection = ceil(switching_volt / BATTERY_RATED_VOLTAGE)
+
     # Calculate battery connections based on battery type
     if battery_type == "tubular":
-        # Series connection = switching_volt / battery_voltage (12V per battery)
-        series_connection = ceil(switching_volt / BATTERY_RATED_VOLTAGE)
-
         # Parallel connection = total_battery_ah / (switching_volt * 220)
         parallel_connection = ceil(total_battery_ah / (switching_volt * 220))
+        parallel_connection = max(parallel_connection, 1)  # Minimum 1
 
         # Total battery count = series × parallel
         battery_count = series_connection * parallel_connection
     else:
         # Lithium batteries - typically come as single units/packs
-        # Calculate based on capacity needed
-        series_connection = ceil(switching_volt / BATTERY_RATED_VOLTAGE)
-        
-        # For lithium, parallel is based on capacity
+        # Parallel connection based on capacity needed
         parallel_connection = ceil(total_battery_ah / BATTERY_RATED_CAPACITY)
-        parallel_connection = max(parallel_connection, 1)
+        parallel_connection = max(parallel_connection, 1)  # Minimum 1
         
         # Total battery count
         battery_count = series_connection * parallel_connection

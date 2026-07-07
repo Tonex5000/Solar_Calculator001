@@ -47,22 +47,6 @@ const Step2Backup = ({ data, onChange }) => {
         </div>
         <span className="hint">Lithium batteries are lighter, faster charging, and last longer than tubular</span>
       </div>
-
-      <div className="form-group">
-        <label htmlFor="battery_voltage">Battery Voltage</label>
-        <select
-          id="battery_voltage"
-          name="battery_voltage"
-          value={data.battery_voltage || ''}
-          onChange={(e) => onChange({ battery_voltage: parseInt(e.target.value) })}
-        >
-          <option value="">Select voltage...</option>
-          <option value="12">12V (Small Systems)</option>
-          <option value="24">24V (Medium Systems)</option>
-          <option value="48">48V (Large Systems)</option>
-        </select>
-        <span className="hint">Higher voltage systems are more efficient for larger loads</span>
-      </div>
     </div>
   );
 };

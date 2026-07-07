@@ -16,7 +16,6 @@ function App() {
     backup_hours: '',
     battery_type: '',
     battery_eff: '',
-    battery_voltage: '',
     charging_hours: '',
     panel_wattage: ''
   });
@@ -36,8 +35,7 @@ function App() {
         return formData.backup_hours && 
                parseFloat(formData.backup_hours) >= 1 && 
                parseFloat(formData.backup_hours) <= 12 &&
-               formData.battery_type !== '' &&
-               formData.battery_voltage !== '';
+               formData.battery_type !== '';
       case 3:
         return formData.charging_hours && 
                parseFloat(formData.charging_hours) >= 1 && 
@@ -72,7 +70,6 @@ function App() {
       backup_hours: parseFloat(formData.backup_hours),
       battery_type: formData.battery_type,
       battery_eff: formData.battery_eff,
-      battery_voltage: formData.battery_voltage,
       switching_volt: formData.switching_volt,
       charging_hours: parseFloat(formData.charging_hours),
       panel_wattage: parseInt(formData.panel_wattage)
@@ -109,7 +106,6 @@ function App() {
       backup_hours: '',
       battery_type: '',
       battery_eff: '',
-      battery_voltage: '',
       charging_hours: '',
       panel_wattage: ''
     });
