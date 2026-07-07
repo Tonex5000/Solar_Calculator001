@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import Step1Load from './components/Step1Load';
 import Step2Backup from './components/Step2Backup';
-import Step3Voltage from './components/Step3Voltage';
 import Step4Charging from './components/Step4Charging';
 import Step5Panel from './components/Step5Panel';
 import Result from './components/Result';
 import './App.css';
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 4;
 
 function App() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -32,17 +31,15 @@ function App() {
       case 1:
         return formData.load && parseFloat(formData.load) > 0;
       case 2:
-        return formData.inverter_voltage !== '';
-      case 3:
         return formData.backup_hours && 
                parseFloat(formData.backup_hours) >= 1 && 
                parseFloat(formData.backup_hours) <= 12 &&
                formData.battery_type !== '';
-      case 4:
+      case 3:
         return formData.charging_hours && 
                parseFloat(formData.charging_hours) >= 1 && 
                parseFloat(formData.charging_hours) <= 12;
-      case 5:
+      case 4:
         return formData.panel_wattage !== '';
       default:
         return false;
@@ -91,7 +88,7 @@ function App() {
 
       const data = await response.json();
       setResults(data);
-      setCurrentStep(6);
+      setCurrentStep(5);
     } catch (err) {
       setError(err.message || 'Failed to calculate. Please check if the backend is running.');
     } finally {
@@ -118,14 +115,12 @@ function App() {
       case 1:
         return <Step1Load data={formData} onChange={updateFormData} onNext={handleNext} />;
       case 2:
-        return <Step3Voltage data={formData} onChange={updateFormData} />;
-      case 3:
         return <Step2Backup data={formData} onChange={updateFormData} />;
-      case 4:
+      case 3:
         return <Step4Charging data={formData} onChange={updateFormData} />;
-      case 5:
+      case 4:
         return <Step5Panel data={formData} onChange={updateFormData} />;
-      case 6:
+      case 5:
         return <Result results={results} isLoading={isLoading} error={error} onReset={handleReset} formData={formData} />;
       default:
         return null;
@@ -140,7 +135,7 @@ function App() {
           <p>Calculate your solar power system requirements</p>
         </header>
 
-        {currentStep <= 5 && (
+        {currentStep <= 4 && (
           <div className="step-indicator">
             <span className="step-text">Step {currentStep} of {TOTAL_STEPS}</span>
             <div className="step-dots">
@@ -157,7 +152,7 @@ function App() {
         <div className="form-card">
           {renderStep()}
 
-          {currentStep <= 5 && currentStep !== 1 && (
+          {currentStep <= 4 && currentStep !== 1 && (
             <div className="button-group">
               {currentStep > 1 && (
                 <button onClick={handleBack} className="btn btn-secondary" disabled={isLoading}>
@@ -181,7 +176,7 @@ function App() {
             </div>
           )}
 
-          {isLoading && currentStep <= 5 && (
+          {isLoading && currentStep <= 4 && (
             <div className="loading-overlay">
               <div className="loading-spinner"></div>
               <p>Calculating your solar system...</p>

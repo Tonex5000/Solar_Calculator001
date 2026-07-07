@@ -1,7 +1,7 @@
 const Step2Backup = ({ data, onChange }) => {
   return (
     <div className="step-content">
-      <h2>Step 3: Backup Hours</h2>
+      <h2>Step 2: Backup Hours</h2>
       <p className="step-description">How many hours of backup power do you need?</p>
       
       <div className="form-group">

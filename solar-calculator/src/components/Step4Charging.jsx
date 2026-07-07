@@ -1,7 +1,7 @@
 const Step4Charging = ({ data, onChange }) => {
   return (
     <div className="step-content">
-      <h2>Step 4: Charging Hours</h2>
+      <h2>Step 3: Charging Hours</h2>
       <p className="step-description">How many peak sun hours are available for charging?</p>
       
       <div className="form-group">
