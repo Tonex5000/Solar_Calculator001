@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 
 # Constants
 BATTERY_RATED_VOLTAGE = 12  # 12V batteries for battery count estimation
-BATTERY_RATED_CAPACITY = 200  # 200Ah batteries
+BATTERY_RATED_CAPACITY = 220  # 200Ah batteries
 
 
 class SolarCalculationInput(BaseModel):
@@ -192,7 +192,7 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
     energy_wh_adjusted = energy_wh * battery_eff
 
     # Calculate total battery capacity needed in Ah (using switching_volt as system voltage)
-    total_battery_ah = energy_wh_adjusted / switching_volt
+    total_battery_ah = energy_wh / 0.8
 
     # Calculate battery capacity in Ah
     battery_ah = ceil(total_battery_ah)
