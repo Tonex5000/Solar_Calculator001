@@ -133,15 +133,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def custom_round(number):
-    whole = int(number)
-    decimal = number - whole
-
-    if decimal < 0.5:
-        return whole
-    elif decimal => 0.5:
-        return whole + 1
-
 
 @app.get("/", tags=["Health"])
 async def root() -> dict[str, str]:
@@ -187,6 +178,15 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
     charging_hours = input_data.charging_hours
     panel_wattage = input_data.panel_wattage
 
+    def custom_round(number):
+        whole = int(number)
+        decimal = number - whole
+    
+        if decimal < 0.5:
+            return whole
+        else:
+            return whole + 1
+
     # Validate charging hours is not zero
     if charging_hours <= 0:
         raise HTTPException(
@@ -223,7 +223,7 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
     # Calculate battery connections based on battery type
     if battery_type == "tubular":
         # Parallel connection = total_battery_ah / (switching_volt * 220)
-        parallel_connection = custom_round(total_battery_ah / (switching_volt * 220))
+        parallel_connection = custom_round(battery_ah / battery_cap)
         parallel_connection = max(parallel_connection, 1)  # Minimum 1
 
         # Total battery count = series × parallel
@@ -231,7 +231,7 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
     else:
         # Lithium batteries - typically come as single units/packs
         # Parallel connection based on capacity needed
-        parallel_connection = ceil(total_battery_ah / BATTERY_RATED_CAPACITY)
+        parallel_connection = ceil(battery_ah / BATTERY_RATED_CAPACITY)
         parallel_connection = max(parallel_connection, 1)  # Minimum 1
         
         # Total battery count
