@@ -209,25 +209,13 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
     # Calculate base energy requirement
     energy_wh = load * backup_hours
 
-    # Apply system loss factor (based on battery efficiency)
-    battery_cap = switching_volt * 220
-
     # Calculate total battery capacity needed in Ah (using switching_volt as system voltage)
     battery_ah = energy_wh / 0.8
-
-    # Calculate battery capacity in Ah
-    #battery_ah = ceil(total_battery_ah)
 
     # Calculate inverter size (with 100% headroom for surge capacity)
     # Convert to kVA (assuming power factor of 0.8)
     inverter_watts = (load * 2) / battery_eff
     inverter_kva = inverter_watts / 1000
-
-    # Calculate solar array size using adjusted energy
-    solar_watts = battery_cap / charging_hours
-
-    # Calculate number of panels (round up)
-    number_of_panels = add_if_prime(custom_round(solar_watts / panel_wattage)) 
 
     # Calculate series connection = switching_volt / 12V (per battery)
     series_connection = switching_volt / 12
@@ -235,7 +223,7 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
     # Calculate battery connections based on battery type
     if battery_type == "tubular":
         # Parallel connection = total_battery_ah / (switching_volt * 220)
-        parallel_connection = custom_round(battery_ah / battery_cap)
+        parallel_connection = custom_round(battery_ah / (switching_volt * 220))
         parallel_connection = max(parallel_connection, 1)  # Minimum 1
 
         # Total battery count = series × parallel
@@ -249,12 +237,21 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
         # Total battery count
         battery_count = series_connection * parallel_connection
 
+    # Apply system loss factor (based on battery efficiency)
+    battery_cap = switching_volt * (parallel_connection * 220)
+
+    # Calculate solar array size using adjusted energy
+    solar_watts = battery_cap / charging_hours
+
+    # Calculate number of panels (round up)
+    number_of_panels = custom_round(solar_watts / panel_wattage)
+
     return SolarCalculationOutput(
         inverter_watts=round(inverter_watts, 1),
         inverter_kva=round(inverter_kva, 2),
         battery_ah=round(battery_ah, 2),
         solar_watts=round(solar_watts, 2),
-        number_of_panels=number_of_panels,
+        number_of_panels=add_if_prime(number_of_panels),
         battery_count=battery_count,
         battery_type=battery_type,
         series_connection=series_connection,
