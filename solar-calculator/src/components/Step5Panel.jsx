@@ -2,7 +2,11 @@ const Step5Panel = ({ data, onChange }) => {
   const panels = [
     { value: '300', label: '300W' },
     { value: '400', label: '400W' },
+    { value: '500', label: '500W' },
     { value: '550', label: '550W' },
+    { value: '580', label: '580W' },
+    { value: '630', label: '630W' },
+    { value: '650', label: '650W' },
   ];
 
   return (
