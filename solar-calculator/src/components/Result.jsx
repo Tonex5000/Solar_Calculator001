@@ -168,7 +168,7 @@ const Result = ({ results, isLoading, error, onReset, formData }) => {
         <div className="result-card">
           <div className="result-icon">⚡</div>
           <div className="result-label">Inverter Size</div>
-          <div className="result-value">{results.inverter_watts} <span>KVA</span></div>
+          <div className="result-value">{results.inverter_kva} <span>KVA</span></div>
           <div className="result-note">Required inverter capacity</div>
         </div>
         
