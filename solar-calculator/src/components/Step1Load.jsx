@@ -4,15 +4,15 @@ import { useState, useRef, useMemo } from 'react';
 // Rules: "Nonlinear + Resistive" = Resistive, "Resistive + Inductive" = Inductive, "Inductive + Nonlinear" = Inductive
 const APPLIANCES_DATA = [
   // Inductive loads (Heavy motors) - Multiplier: 3
-  { name: 'Air Conditioner', category: 'Inductive', multiplier: 3, wattage: '500 - 3,500 W' },
+  { name: 'Air Conditioner', category: 'Inductive', multiplier: 3, wattage: '500 - 3,500 W', usesHp: true },
   { name: 'Refrigerator', category: 'Inductive', multiplier: 3, wattage: '100 - 800 W' },
   { name: 'Washing Machine', category: 'Inductive', multiplier: 3, wattage: '400 - 1,400 W' },
   { name: 'Ceiling Fan', category: 'Inductive', multiplier: 3, wattage: '50 - 100 W' },
   { name: 'Exhaust Fan', category: 'Inductive', multiplier: 3, wattage: '50 - 100 W' },
   { name: 'Vacuum Cleaner', category: 'Inductive', multiplier: 3, wattage: '500 - 1,200 W' },
   { name: 'Dishwasher', category: 'Inductive', multiplier: 3, wattage: '1,200 - 2,400 W' },
-  { name: 'Water Pump', category: 'Inductive', multiplier: 3, wattage: '500 - 1,500 W' },
-  { name: 'Inverter AC', category: 'Inductive', multiplier: 3, wattage: '500 - 2,500 W' },
+  { name: 'Water Pump', category: 'Inductive', multiplier: 3, wattage: '500 - 1,500 W', usesHp: true },
+  { name: 'Inverter AC', category: 'Inductive', multiplier: 3, wattage: '500 - 2,500 W', usesHp: true },
   { name: 'Hair Dryer', category: 'Inductive', multiplier: 3, wattage: '1,000 - 1,800 W' },
   // Resistive loads (Heating) - Multiplier: 4
   { name: 'Electric Heater', category: 'Resistive', multiplier: 4, wattage: '1,000 - 2,000 W' },
@@ -31,6 +31,9 @@ const APPLIANCES_DATA = [
   { name: 'Laptop', category: 'Nonlinear', multiplier: 1, wattage: '50 - 300 W' },
   { name: 'Phone Charger', category: 'Nonlinear', multiplier: 1, wattage: '5 - 25 W' },
 ];
+
+// Horsepower to Watt conversion (1 HP = 746 W)
+const HP_TO_WATT = 746;
 
 // Inverter tiers for load meter - extended to 50kVA with system voltage
 // Voltage based on standard inverter sizing chart
@@ -55,7 +58,7 @@ const Step1Load = ({ data, onChange, onNext }) => {
   const [appliances, setAppliances] = useState(
     data.appliances && data.appliances.length > 0
       ? data.appliances
-      : [{ id: 1, applianceName: '', wattage: '', quantity: 1, selectedAppliance: null }]
+      : [{ id: 1, applianceName: '', wattage: '', horsepower: '', quantity: 1, selectedAppliance: null }]
   );
 
   const [showSuggestions, setShowSuggestions] = useState({});
@@ -116,7 +119,7 @@ const Step1Load = ({ data, onChange, onNext }) => {
 
   const handleSearchChange = (index, value) => {
     const updated = [...appliances];
-    updated[index] = { ...updated[index], applianceName: value, wattage: '', selectedAppliance: null };
+    updated[index] = { ...updated[index], applianceName: value, wattage: '', horsepower: '', selectedAppliance: null };
     setAppliances(updated);
     setShowSuggestions((prev) => ({ ...prev, [index]: value.length > 0 }));
   };
@@ -128,6 +131,7 @@ const Step1Load = ({ data, onChange, onNext }) => {
       applianceName: appliance.name,
       selectedAppliance: appliance,
       wattage: '',
+      horsepower: '',
     };
     setAppliances(updated);
     setShowSuggestions((prev) => ({ ...prev, [index]: false }));
@@ -136,6 +140,15 @@ const Step1Load = ({ data, onChange, onNext }) => {
   const handleWattageChange = (index, value) => {
     const updated = [...appliances];
     updated[index] = { ...updated[index], wattage: value };
+    setAppliances(updated);
+  };
+
+  const handleHorsepowerChange = (index, value) => {
+    const updated = [...appliances];
+    // Convert HP to watts and store in wattage
+    const hp = parseFloat(value) || 0;
+    const convertedWattage = hp * HP_TO_WATT;
+    updated[index] = { ...updated[index], horsepower: value, wattage: convertedWattage.toString() };
     setAppliances(updated);
   };
 
@@ -152,6 +165,7 @@ const Step1Load = ({ data, onChange, onNext }) => {
         id: Date.now(),
         applianceName: '',
         wattage: '',
+        horsepower: '',
         quantity: 1,
         selectedAppliance: null,
       },
@@ -173,6 +187,8 @@ const Step1Load = ({ data, onChange, onNext }) => {
         const wattage = parseFloat(app.wattage);
         const quantity = parseInt(app.quantity);
         const multiplier = app.selectedAppliance.multiplier;
+        const usesHorsepower = app.selectedAppliance.usesHp;
+        const horsepower = app.horsepower ? parseFloat(app.horsepower) : null;
         const calculatedLoad = quantity * wattage * multiplier;
 
         total += calculatedLoad;
@@ -182,6 +198,8 @@ const Step1Load = ({ data, onChange, onNext }) => {
           quantity,
           multiplier,
           calculatedLoad,
+          usesHorsepower,
+          horsepower,
         });
       }
     });
@@ -278,101 +296,127 @@ const Step1Load = ({ data, onChange, onNext }) => {
           <div className="header-cell qty-col">Qty</div>
         </div>
 
-        {appliances.map((app, index) => (
-          <div key={app.id || index} className="appliance-row">
-            {/* Appliance Search Column */}
-            <div className="appliance-cell appliance-col">
-              <div className="search-container">
-                <input
-                  type="text"
-                  value={app.applianceName}
-                  onChange={(e) => handleSearchChange(index, e.target.value)}
-                  onFocus={() => setShowSuggestions((prev) => ({ ...prev, [index]: true }))}
-                  onBlur={() => setTimeout(() => setShowSuggestions((prev) => ({ ...prev, [index]: false })), 200)}
-                  placeholder="Search appliance..."
-                  className="search-input"
-                />
+        {appliances.map((app, index) => {
+          const usesHorsepower = app.selectedAppliance?.usesHp;
+          return (
+            <div key={app.id || index} className="appliance-row">
+              {/* Appliance Search Column */}
+              <div className="appliance-cell appliance-col">
+                <div className="search-container">
+                  <input
+                    type="text"
+                    value={app.applianceName}
+                    onChange={(e) => handleSearchChange(index, e.target.value)}
+                    onFocus={() => setShowSuggestions((prev) => ({ ...prev, [index]: true }))}
+                    onBlur={() => setTimeout(() => setShowSuggestions((prev) => ({ ...prev, [index]: false })), 200)}
+                    placeholder="Search appliance..."
+                    className="search-input"
+                  />
 
-                {showSuggestions[index] && app.applianceName && (
-                  <div className="suggestions-dropdown">
-                    {getFilteredAppliances(app.applianceName)
-                      .slice(0, 8)
-                      .map((suggestion, i) => (
-                        <div
-                          key={i}
-                          className="suggestion-item"
-                          onClick={() => selectAppliance(index, suggestion)}
-                        >
-                          <span className="suggestion-name">{suggestion.name}</span>
-                          <span className={`category-tag ${suggestion.category.toLowerCase()}`}>
-                            {suggestion.category} (×{suggestion.multiplier})
-                          </span>
-                        </div>
-                      ))}
+                  {showSuggestions[index] && app.applianceName && (
+                    <div className="suggestions-dropdown">
+                      {getFilteredAppliances(app.applianceName)
+                        .slice(0, 8)
+                        .map((suggestion, i) => (
+                          <div
+                            key={i}
+                            className="suggestion-item"
+                            onClick={() => selectAppliance(index, suggestion)}
+                          >
+                            <span className="suggestion-name">{suggestion.name}</span>
+                            <span className={`category-tag ${suggestion.category.toLowerCase()}`}>
+                              {suggestion.category} (×{suggestion.multiplier})
+                              {suggestion.usesHp && ' [HP]'}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Wattage Column with Upload or Horsepower */}
+              <div className="appliance-cell wattage-col">
+                {usesHorsepower ? (
+                  <div className="horsepower-input-container">
+                    <input
+                      type="number"
+                      value={app.horsepower}
+                      onChange={(e) => handleHorsepowerChange(index, e.target.value)}
+                      placeholder="HP"
+                      min="0.5"
+                      step="0.5"
+                      className="wattage-input"
+                    />
+                    <span className="unit-label">HP</span>
+                    {app.wattage && parseFloat(app.wattage) > 0 && (
+                      <span className="converted-wattage">
+                        = {parseFloat(app.wattage).toLocaleString()} W
+                      </span>
+                    )}
                   </div>
+                ) : (
+                  <>
+                    <input
+                      type="number"
+                      value={app.wattage}
+                      onChange={(e) => handleWattageChange(index, e.target.value)}
+                      placeholder="150"
+                      min="1"
+                      className="wattage-input"
+                    />
+
+                    <label className={`upload-detect-btn ${analyzingIndex === index ? 'analyzing' : ''}`}>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        ref={(el) => (fileInputRefs.current[index] = el)}
+                        onChange={(e) => handleFileChange(index, e)}
+                        disabled={analyzingIndex === index}
+                      />
+                      {analyzingIndex === index ? 'Analyzing...' : 'Upload to detect wattage'}
+                    </label>
+
+                    {analyzingIndex === index && <span className="analysis-status">Analyzing image...</span>}
+
+                    {analysisResult && analyzingIndex === null && (
+                      <span className={`analysis-result ${analysisResult.wattage ? 'success' : 'error'}`}>
+                        {analysisResult.wattage
+                          ? `✓ Detected: ${analysisResult.wattage}W`
+                          : `⚠ ${analysisResult.raw_text}`}
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
-            </div>
 
-            {/* Wattage Column with Upload */}
-            <div className="appliance-cell wattage-col">
-              <input
-                type="number"
-                value={app.wattage}
-                onChange={(e) => handleWattageChange(index, e.target.value)}
-                placeholder="150"
-                min="1"
-                className="wattage-input"
-              />
-
-              <label className={`upload-detect-btn ${analyzingIndex === index ? 'analyzing' : ''}`}>
+              {/* Quantity Column */}
+              <div className="appliance-cell qty-col">
                 <input
-                  type="file"
-                  accept="image/*"
-                  ref={(el) => (fileInputRefs.current[index] = el)}
-                  onChange={(e) => handleFileChange(index, e)}
-                  disabled={analyzingIndex === index}
+                  type="number"
+                  value={app.quantity}
+                  onChange={(e) => handleQuantityChange(index, e.target.value)}
+                  min="1"
+                  className="qty-input"
                 />
-                {analyzingIndex === index ? 'Analyzing...' : 'Upload to detect wattage'}
-              </label>
+              </div>
 
-              {analyzingIndex === index && <span className="analysis-status">Analyzing image...</span>}
-
-              {analysisResult && analyzingIndex === null && (
-                <span className={`analysis-result ${analysisResult.wattage ? 'success' : 'error'}`}>
-                  {analysisResult.wattage
-                    ? `✓ Detected: ${analysisResult.wattage}W`
-                    : `⚠ ${analysisResult.raw_text}`}
-                </span>
+              {/* Remove Button */}
+              {appliances.length > 1 && (
+                <button
+                  type="button"
+                  className="remove-btn"
+                  onClick={() => removeAppliance(index)}
+                >
+                  ×
+                </button>
               )}
+
+              {/* Calculation Preview */}
+
             </div>
-
-            {/* Quantity Column */}
-            <div className="appliance-cell qty-col">
-              <input
-                type="number"
-                value={app.quantity}
-                onChange={(e) => handleQuantityChange(index, e.target.value)}
-                min="1"
-                className="qty-input"
-              />
-            </div>
-
-            {/* Remove Button */}
-            {appliances.length > 1 && (
-              <button
-                type="button"
-                className="remove-btn"
-                onClick={() => removeAppliance(index)}
-              >
-                ×
-              </button>
-            )}
-
-            {/* Calculation Preview */}
-
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <button type="button" className="btn btn-add" onClick={addAppliance}>
