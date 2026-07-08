@@ -196,7 +196,7 @@ async def calculate_solar_system(input_data: SolarCalculationInput) -> SolarCalc
         if n % i == 0:
             return n  # Not prime
 
-      return n + 1:
+      return n + 1
      
 
     # Validate charging hours is not zero
