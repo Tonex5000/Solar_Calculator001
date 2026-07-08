@@ -17,7 +17,7 @@ const Step4Charging = ({ data, onChange }) => {
           max="5"
           autoFocus
         />
-        <span className="hint warning">Typical: 4–6 hours</span>
+        <span className="hint warning">Typical: 2–5 hours</span>
       </div>
     </div>
   );
