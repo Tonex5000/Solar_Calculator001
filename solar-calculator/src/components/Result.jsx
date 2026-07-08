@@ -30,14 +30,16 @@ const Result = ({ results, isLoading, error, onReset, formData }) => {
     const load = formData?.load || results?.load || 'N/A';
     const backupHours = formData?.backup_hours || 'N/A';
     const batteryType = formData?.battery_type || 'N/A';
-    const inverterVoltage = formData?.inverter_voltage || 'N/A';
+    const switchingVolt = formData?.switching_volt || 'N/A';
     const chargingHours = formData?.charging_hours || 'N/A';
-    const panelWattage = formData?.panel_wattage || 'N/A';
+    const panelWattage = formData?.panel_wattage === 'other' 
+      ? formData?.other_wattage 
+      : formData?.panel_wattage || 'N/A';
     
     doc.text(`Total Load: ${load} W`, 25, 65);
     doc.text(`Backup Hours: ${backupHours} hours`, 25, 72);
     doc.text(`Battery Type: ${batteryType}`, 25, 79);
-    doc.text(`Inverter Voltage: ${inverterVoltage}`, 25, 86);
+    doc.text(`Switching Volt: ${switchingVolt}V`, 25, 86);
     doc.text(`Charging Hours: ${chargingHours} hours`, 25, 93);
     doc.text(`Panel Wattage: ${panelWattage} W`, 25, 100);
     
@@ -76,26 +78,34 @@ const Result = ({ results, isLoading, error, onReset, formData }) => {
     
     doc.setTextColor(102, 126, 234);
     doc.setFontSize(12);
-    doc.text('🔋 Number of Batteries', 25, 165);
+    doc.text('🔋 Battery Connection', 25, 165);
     doc.setTextColor(80, 80, 80);
     doc.setFontSize(11);
-    doc.text(`${results.battery_count}`, 120, 165);
+    doc.text(`${results.series_connection}S × ${results.parallel_connection}P`, 120, 165);
+    
+    doc.setTextColor(102, 126, 234);
+    doc.setFontSize(12);
+    doc.text('🔋 Total Batteries', 25, 175);
+    doc.setTextColor(80, 80, 80);
+    doc.setFontSize(11);
+    doc.text(`${results.battery_count} (${results.battery_type})`, 120, 175);
     
     // Appliance Details Section
+    const startY = results.battery_count ? 190 : 180;
     if (formData?.applianceDetails && formData.applianceDetails.length > 0) {
       doc.setFontSize(14);
       doc.setTextColor(51, 51, 51);
-      doc.text('Appliance Load Breakdown', 20, 180);
+      doc.text('Appliance Load Breakdown', 20, startY);
       
       doc.setFontSize(10);
       doc.setTextColor(100, 100, 100);
-      doc.text('Appliance', 25, 190);
-      doc.text('Watts', 90, 190);
-      doc.text('Qty', 115, 190);
-      doc.text('Mult', 135, 190);
-      doc.text('Load', 160, 190);
+      doc.text('Appliance', 25, startY + 10);
+      doc.text('Watts', 90, startY + 10);
+      doc.text('Qty', 115, startY + 10);
+      doc.text('Mult', 135, startY + 10);
+      doc.text('Load', 160, startY + 10);
       
-      let yPos = 198;
+      let yPos = startY + 18;
       doc.setTextColor(80, 80, 80);
       doc.setFontSize(10);
       
@@ -158,7 +168,7 @@ const Result = ({ results, isLoading, error, onReset, formData }) => {
         <div className="result-card">
           <div className="result-icon">⚡</div>
           <div className="result-label">Inverter Size</div>
-          <div className="result-value">{results.inverter_watts} KVA</div>
+          <div className="result-value">{results.inverter_watts} <span>KVA</span></div>
           <div className="result-note">Required inverter capacity</div>
         </div>
         
@@ -183,11 +193,18 @@ const Result = ({ results, isLoading, error, onReset, formData }) => {
           <div className="result-note">Panels needed</div>
         </div>
 
-         <div className="result-card">
+        <div className="result-card">
           <div className="result-icon">🔋</div>
-          <div className="result-label">Number of batteries</div>
+          <div className="result-label">Battery Connection</div>
+          <div className="result-value">{results.series_connection}S × {results.parallel_connection}P</div>
+          <div className="result-note">Series × Parallel</div>
+        </div>
+
+        <div className="result-card">
+          <div className="result-icon">🔋</div>
+          <div className="result-label">Total Batteries</div>
           <div className="result-value">{results.battery_count}</div>
-          <div className="result-note">Battries needed</div>
+          <div className="result-note">{results.battery_type} batteries</div>
         </div>
       </div>
 
