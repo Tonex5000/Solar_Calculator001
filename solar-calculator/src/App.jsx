@@ -17,7 +17,8 @@ function App() {
     battery_type: '',
     battery_eff: '',
     charging_hours: '',
-    panel_wattage: ''
+    panel_wattage: '',
+    other_wattage: ''
   });
   const [results, setResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,6 +42,9 @@ function App() {
                parseFloat(formData.charging_hours) >= 1 && 
                parseFloat(formData.charging_hours) <= 12;
       case 4:
+        if (formData.panel_wattage === 'other') {
+          return formData.other_wattage && parseInt(formData.other_wattage) > 0;
+        }
         return formData.panel_wattage !== '';
       default:
         return false;
@@ -72,7 +76,9 @@ function App() {
       battery_eff: formData.battery_eff,
       switching_volt: formData.switching_volt,
       charging_hours: parseFloat(formData.charging_hours),
-      panel_wattage: parseInt(formData.panel_wattage)
+      panel_wattage: formData.panel_wattage === 'other' 
+        ? parseInt(formData.other_wattage) 
+        : parseInt(formData.panel_wattage)
     };
 
     try {
@@ -107,7 +113,8 @@ function App() {
       battery_type: '',
       battery_eff: '',
       charging_hours: '',
-      panel_wattage: ''
+      panel_wattage: '',
+      other_wattage: ''
     });
     setResults(null);
     setError(null);

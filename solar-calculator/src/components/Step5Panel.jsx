@@ -9,6 +9,17 @@ const Step5Panel = ({ data, onChange }) => {
     { value: '650', label: '650W' },
   ];
 
+  const isOtherSelected = data.panel_wattage === 'other';
+  const otherWattage = data.other_wattage || '';
+
+  const handlePanelChange = (value) => {
+    onChange({ panel_wattage: value });
+  };
+
+  const handleOtherWattageChange = (value) => {
+    onChange({ panel_wattage: 'other', other_wattage: value });
+  };
+
   return (
     <div className="step-content">
       <h2>Step 4: Panel Wattage</h2>
@@ -27,12 +38,42 @@ const Step5Panel = ({ data, onChange }) => {
                 name="panel_wattage"
                 value={panel.value}
                 checked={data.panel_wattage === panel.value}
-                onChange={(e) => onChange({ panel_wattage: e.target.value })}
+                onChange={(e) => handlePanelChange(e.target.value)}
               />
               <span className="radio-label">{panel.label}</span>
             </label>
           ))}
+          <label 
+            className={`radio-option ${isOtherSelected ? 'selected' : ''}`}
+          >
+            <input
+              type="radio"
+              name="panel_wattage"
+              value="other"
+              checked={isOtherSelected}
+              onChange={() => handlePanelChange('other')}
+            />
+            <span className="radio-label">Other</span>
+          </label>
         </div>
+        
+        {isOtherSelected && (
+          <div className="form-group" style={{ marginTop: '15px', marginLeft: '20px' }}>
+            <label htmlFor="other_wattage">Enter Custom Wattage (W)</label>
+            <input
+              type="number"
+              id="other_wattage"
+              name="other_wattage"
+              value={otherWattage}
+              onChange={(e) => handleOtherWattageChange(e.target.value)}
+              placeholder="e.g., 450"
+              min="1"
+              autoFocus
+            />
+            <span className="hint">Enter the wattage of your custom panel</span>
+          </div>
+        )}
+        
         <span className="hint">Higher wattage panels generate more power but cost more</span>
       </div>
     </div>
