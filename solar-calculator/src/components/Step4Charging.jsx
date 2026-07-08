@@ -5,7 +5,7 @@ const Step4Charging = ({ data, onChange }) => {
       <p className="step-description">How many peak sun hours are available for charging?</p>
       
       <div className="form-group">
-        <label htmlFor="charging_hours">Charging Hours (1-12)</label>
+        <label htmlFor="charging_hours">Charging Hours (1-4)</label>
         <input
           type="number"
           id="charging_hours"
@@ -14,7 +14,7 @@ const Step4Charging = ({ data, onChange }) => {
           onChange={(e) => onChange({ charging_hours: e.target.value })}
           placeholder="e.g., 3"
           min="1"
-          max="4"
+          max="5"
           autoFocus
         />
         <span className="hint warning">Typical: 4–6 hours</span>
