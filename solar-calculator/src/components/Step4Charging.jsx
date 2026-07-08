@@ -12,9 +12,9 @@ const Step4Charging = ({ data, onChange }) => {
           name="charging_hours"
           value={data.charging_hours || ''}
           onChange={(e) => onChange({ charging_hours: e.target.value })}
-          placeholder="e.g., 5"
+          placeholder="e.g., 3"
           min="1"
-          max="12"
+          max="4"
           autoFocus
         />
         <span className="hint warning">Typical: 4–6 hours</span>
