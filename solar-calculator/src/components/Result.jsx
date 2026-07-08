@@ -53,7 +53,7 @@ const Result = ({ results, isLoading, error, onReset, formData }) => {
     doc.text('⚡ Inverter Size', 25, 125);
     doc.setTextColor(80, 80, 80);
     doc.setFontSize(11);
-    doc.text(`${results.inverter_watts} KVA`, 120, 125);
+    doc.text(`${results.inverter_kva} KVA`, 120, 125);
     
     doc.setTextColor(102, 126, 234);
     doc.setFontSize(12);
