@@ -9,15 +9,13 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   min-height: 100vh;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 40px 20px;
 }
 
 .app {
   width: 100%;
   max-width: 760px;
+  margin: 0 auto;
+  padding: 64px 24px 80px;
   position: relative;
   z-index: 1;
 }
@@ -37,17 +35,18 @@ body {
     linear-gradient(90deg, var(--color-green-glow) 1px, transparent 1px);
   background-size: 48px 48px;
   background-position: center;
-  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 80% 0%, #000 0%, transparent 70%);
-  mask-image: radial-gradient(ellipse 70% 60% at 80% 0%, #000 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 20%, black 0%, transparent 75%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 20%, black 0%, transparent 75%);
 }
 
 .ambient-bg::after {
   content: '';
   position: absolute;
-  top: -20%;
-  right: -10%;
-  width: 60vw;
-  height: 60vw;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70vw;
+  height: 60vh;
   background: radial-gradient(circle, var(--color-green-glow) 0%, transparent 60%);
   filter: blur(40px);
 }
@@ -549,11 +548,13 @@ select:focus-visible,
 .btn-add {
   width: 100%;
   padding: 16px;
-  background: transparent;
-  color: var(--color-text-dim);
+  background: none;
   border: none;
-  font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
   cursor: pointer;
   transition: color 0.15s ease;
   margin-bottom: 20px;
