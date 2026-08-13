@@ -67,38 +67,32 @@ const Step1Load = ({ data, onChange, onNext }) => {
 
   const fileInputRefs = useRef({});
 
-  // Analyze image using AI
-  const analyzeImage = async (index, file) => {
-    setAnalyzingIndex(index);
-    setAnalysisResult(null);
-
-    const formData = new FormData();
-    formData.append('image', file);
-
-    try {
-      const response = await fetch('https://solar-calculator001-lwg2.onrender.com/api/test-image', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) throw new Error('Failed to analyze image');
-
-      const result = await response.json();
-      setAnalysisResult(result);
-
-      if (result.wattage) {
-        handleWattageChange(index, result.wattage.toString());
-      }
-    } catch (error) {
-      console.error('Analysis error:', error);
-      setAnalysisResult({
-        wattage: null,
-        raw_text: 'Error: Could not analyze image. Please try again or enter wattage manually.',
-      });
-    } finally {
-      setAnalyzingIndex(null);
+const analyzeImage = async (index, file) => {
+  setAnalyzingIndex(index);
+  setAnalysisResult(null);
+  const formData = new FormData();
+  formData.append('file', file); // must match backend's `file` param name
+  try {
+    const response = await fetch('https://solar-calculator001-8.onrender.com/analyze-adapter', {
+      method: 'POST',
+      body: formData,
+    });
+    if (!response.ok) throw new Error('Failed to analyze image');
+    const result = await response.json();
+    setAnalysisResult(result);
+    if (result.wattage_value) {
+      handleWattageChange(index, result.wattage_value.toString());
     }
-  };
+  } catch (error) {
+    console.error('Analysis error:', error);
+    setAnalysisResult({
+      wattage: null,
+      raw_text: 'Error: Could not analyze image. Please try again or enter wattage manually.',
+    });
+  } finally {
+    setAnalyzingIndex(null);
+  }
+};
 
   const handleFileChange = (index, e) => {
     const file = e.target.files?.[0];
