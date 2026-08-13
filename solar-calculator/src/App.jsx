@@ -4,9 +4,12 @@ import Step2Backup from './components/Step2Backup';
 import Step4Charging from './components/Step4Charging';
 import Step5Panel from './components/Step5Panel';
 import Result from './components/Result';
+import Panel from './components/ui/Panel';
+import Stepper from './components/ui/Stepper';
 import './App.css';
 
 const TOTAL_STEPS = 4;
+const STEP_LABELS = ['LOAD', 'BACKUP', 'CHARGING', 'PANEL'];
 
 function App() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -139,60 +142,54 @@ function App() {
 
   return (
     <div className="app">
+      <div className="ambient-bg" aria-hidden="true" />
       <div className="container">
         <header className="header">
-          <h1>Load Audit</h1>
+          <span className="eyebrow">VOLTRA / LOAD AUDIT</span>
+          <h1>LOAD AUDIT</h1>
           <p>Calculate your solar power system requirements</p>
         </header>
 
         {currentStep <= 4 && (
-          <div className="step-indicator">
-            <span className="step-text">Step {currentStep} of {TOTAL_STEPS}</span>
-            <div className="step-dots">
-              {[...Array(TOTAL_STEPS)].map((_, index) => (
-                <div
-                  key={index}
-                  className={`step-dot ${index + 1 === currentStep ? 'active' : ''} ${index + 1 < currentStep ? 'completed' : ''}`}
-                />
-              ))}
-            </div>
-          </div>
+          <Stepper steps={STEP_LABELS} currentStep={currentStep} totalSteps={TOTAL_STEPS} />
         )}
 
-        <div className="form-card">
-          {renderStep()}
+        <Panel className="form-card">
+          <div className="form-card-inner">
+            {renderStep()}
 
-          {currentStep <= 4 && currentStep !== 1 && (
-            <div className="button-group">
-              {currentStep > 1 && (
-                <button onClick={handleBack} className="btn btn-secondary" disabled={isLoading}>
-                  Back
-                </button>
-              )}
-              <button
-                onClick={handleNext}
-                className={`btn btn-primary ${isLoading ? 'btn-loading' : ''}`}
-                disabled={!isStepValid(currentStep) || isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <span className="btn-spinner"></span>
-                    Calculating...
-                  </>
-                ) : (
-                  currentStep === TOTAL_STEPS ? 'Calculate' : 'Next'
+            {currentStep <= 4 && currentStep !== 1 && (
+              <div className="button-group">
+                {currentStep > 1 && (
+                  <button onClick={handleBack} className="btn btn-secondary" disabled={isLoading}>
+                    Back
+                  </button>
                 )}
-              </button>
-            </div>
-          )}
+                <button
+                  onClick={handleNext}
+                  className={`btn btn-primary ${isLoading ? 'btn-loading' : ''}`}
+                  disabled={!isStepValid(currentStep) || isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <span className="btn-spinner"></span>
+                      Calculating...
+                    </>
+                  ) : (
+                    currentStep === TOTAL_STEPS ? 'Calculate' : 'Continue'
+                  )}
+                </button>
+              </div>
+            )}
 
-          {isLoading && currentStep <= 4 && (
-            <div className="loading-overlay">
-              <div className="loading-spinner"></div>
-              <p>Calculating your solar system...</p>
-            </div>
-          )}
-        </div>
+            {isLoading && currentStep <= 4 && (
+              <div className="loading-overlay">
+                <div className="loading-spinner"></div>
+                <p>Calculating your solar system...</p>
+              </div>
+            )}
+          </div>
+        </Panel>
       </div>
     </div>
   );

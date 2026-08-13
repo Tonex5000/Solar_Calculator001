@@ -1,0 +1,46 @@
+.rail {
+  margin-bottom: 24px;
+}
+
+.rail-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.rail-top span {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.rail-top span.current {
+  color: var(--color-green);
+}
+
+.rail-track {
+  height: 4px;
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.rail-fill {
+  height: 100%;
+  background: var(--color-green);
+  box-shadow: 0 0 12px var(--color-green-glow);
+  transition: width 0.4s ease;
+}
+
+@media (max-width: 560px) {
+  .rail-top span {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+  }
+}
