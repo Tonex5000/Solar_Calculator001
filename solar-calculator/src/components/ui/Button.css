@@ -1,0 +1,51 @@
+.btn-shared {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  border: none;
+  transition: filter 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.btn-shared:focus-visible {
+  outline: 2px solid var(--color-green);
+  outline-offset: 2px;
+}
+
+.btn-shared.primary {
+  background: var(--color-green);
+  color: #0a0a0a;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 20px;
+  clip-path: var(--clip-btn);
+}
+
+.btn-shared.primary:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.btn-shared.outline {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--color-green);
+  border: 1px solid var(--color-green-dim);
+  padding: 12px 20px;
+}
+
+.btn-shared.outline:hover:not(:disabled) {
+  background: var(--color-green);
+  color: #0a0a0a;
+}
+
+.btn-shared:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

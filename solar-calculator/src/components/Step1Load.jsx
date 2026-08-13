@@ -1,4 +1,5 @@
 import { useState, useRef, useMemo } from 'react';
+import Field from './ui/Field';
 
 // Appliance data from PDF with categorized load types
 // Rules: "Nonlinear + Resistive" = Resistive, "Resistive + Inductive" = Inductive, "Inductive + Nonlinear" = Inductive
@@ -233,7 +234,8 @@ const analyzeImage = async (index, file) => {
 
   return (
     <div className="step-content">
-      <h2>Step 1: Load</h2>
+      <span className="step-eyebrow">STEP 01 / 04</span>
+      <h2>LOAD</h2>
       <p className="step-description">Search and select appliances to calculate your power load</p>
 
       {/* Load Meter */}
@@ -297,14 +299,13 @@ const analyzeImage = async (index, file) => {
               {/* Appliance Search Column */}
               <div className="appliance-cell appliance-col">
                 <div className="search-container">
-                  <input
+                  <Field
                     type="text"
                     value={app.applianceName}
                     onChange={(e) => handleSearchChange(index, e.target.value)}
                     onFocus={() => setShowSuggestions((prev) => ({ ...prev, [index]: true }))}
                     onBlur={() => setTimeout(() => setShowSuggestions((prev) => ({ ...prev, [index]: false })), 200)}
                     placeholder="Search appliance..."
-                    className="search-input"
                   />
 
                   {showSuggestions[index] && app.applianceName && (
@@ -333,14 +334,14 @@ const analyzeImage = async (index, file) => {
               <div className="appliance-cell wattage-col">
                 {usesHorsepower ? (
                   <div className="horsepower-input-container">
-                    <input
+                    <Field
                       type="number"
+                      mono
                       value={app.horsepower}
                       onChange={(e) => handleHorsepowerChange(index, e.target.value)}
                       placeholder="HP"
                       min="0.5"
                       step="0.5"
-                      className="wattage-input"
                     />
                     <span className="unit-label">HP</span>
                     {app.wattage && parseFloat(app.wattage) > 0 && (
@@ -351,13 +352,13 @@ const analyzeImage = async (index, file) => {
                   </div>
                 ) : (
                   <>
-                    <input
+                    <Field
                       type="number"
+                      mono
                       value={app.wattage}
                       onChange={(e) => handleWattageChange(index, e.target.value)}
                       placeholder="150"
                       min="1"
-                      className="wattage-input"
                     />
 
                     <label className={`upload-detect-btn ${analyzingIndex === index ? 'analyzing' : ''}`}>
@@ -386,12 +387,12 @@ const analyzeImage = async (index, file) => {
 
               {/* Quantity Column */}
               <div className="appliance-cell qty-col">
-                <input
+                <Field
                   type="number"
+                  mono
                   value={app.quantity}
                   onChange={(e) => handleQuantityChange(index, e.target.value)}
                   min="1"
-                  className="qty-input"
                 />
               </div>
 
@@ -413,17 +414,17 @@ const analyzeImage = async (index, file) => {
         })}
       </div>
 
-      <button type="button" className="btn btn-add" onClick={addAppliance}>
-        + Add More Appliances
+      <button type="button" className="btn-add" onClick={addAppliance}>
+        + Add more appliances
       </button>
 
       <button
         type="button"
-        className="btn btn-submit"
+        className="btn-submit"
         onClick={handleSubmit}
         disabled={total === 0}
       >
-        Submit Load ({total > 0 ? `${total.toLocaleString()} W` : '0 W'})
+        Submit Load{' — '}<span style={{ opacity: 0.6, fontFamily: 'var(--font-mono)', fontWeight: 500 }}>{total > 0 ? `${total.toLocaleString()} W` : '0 W'}</span>
       </button>
     </div>
   );
