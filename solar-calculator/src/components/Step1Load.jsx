@@ -243,7 +243,7 @@ const analyzeImage = async (index, file) => {
         <div className="load-meter">
           <div className="load-meter-header">
             <span>Total Connected Load</span>
-            <span className="watt-display" style={{ color: isOverCapacity ? '#ef4444' : '#667eea' }}>
+            <span className="watt-display" style={{ color: isOverCapacity ? '#ef4444' : 'var(--color-green)' }}>
               {total.toLocaleString()}
               <span className="watt-unit">W</span>
             </span>
@@ -255,7 +255,7 @@ const analyzeImage = async (index, file) => {
                 key={i}
                 className={`gauge-segment ${i < litSegments ? 'lit' : ''}`}
                 style={{
-                  background: i < litSegments ? (isOverCapacity ? '#ef4444' : '#667eea') : 'rgba(255,255,255,0.1)',
+                  background: i < litSegments ? (isOverCapacity ? '#ef4444' : 'var(--color-green)') : 'rgba(255,255,255,0.1)',
                 }}
               />
             ))}
