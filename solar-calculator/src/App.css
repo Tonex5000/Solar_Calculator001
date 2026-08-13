@@ -189,6 +189,17 @@ body {
   outline-offset: 2px;
 }
 
+.btn-submit:focus-visible,
+.btn-add:focus-visible,
+.btn-pdf:focus-visible,
+.upload-detect-btn:focus-visible,
+.remove-btn:focus-visible,
+select:focus-visible,
+.radio-option:focus-within {
+  outline: 2px solid var(--color-green);
+  outline-offset: 2px;
+}
+
 .btn-primary {
   background: var(--color-green);
   color: #0a0a0a;
