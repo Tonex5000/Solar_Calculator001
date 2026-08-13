@@ -376,7 +376,7 @@ const analyzeImage = async (index, file) => {
                     {analysisResult && analyzingIndex === null && (
                       <span className={`analysis-result ${analysisResult.wattage ? 'success' : 'error'}`}>
                         {analysisResult.wattage
-                          ? `✓ Detected: ${analysisResult.wattage}W`
+                          ? `✓ Detected: ${analysisResult.wattage}`
                           : `⚠ ${analysisResult.raw_text}`}
                       </span>
                     )}
