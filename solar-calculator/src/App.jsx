@@ -146,7 +146,7 @@ function App() {
       <div className="container">
         <header className="header">
           <span className="eyebrow">VOLTRA SYSTEM SIZING</span>
-          <h1>LOAD AUDIT</h1>
+          <h1>LOAD <span className="accent">AUDIT</span></h1>
           <p>Calculate your solar power system requirements</p>
         </header>
 
