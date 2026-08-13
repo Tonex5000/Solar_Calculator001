@@ -1,13 +1,17 @@
+import Field from './ui/Field';
+
 const Step4Charging = ({ data, onChange }) => {
   return (
     <div className="step-content">
-      <h2>Step 3: Charging Hours</h2>
+      <span className="step-eyebrow">STEP 03 / 04</span>
+      <h2>CHARGING</h2>
       <p className="step-description">How many peak sun hours are available for charging?</p>
-      
+
       <div className="form-group">
         <label htmlFor="charging_hours">Charging Hours (1-4)</label>
-        <input
+        <Field
           type="number"
+          mono
           id="charging_hours"
           name="charging_hours"
           value={data.charging_hours || ''}
@@ -17,7 +21,7 @@ const Step4Charging = ({ data, onChange }) => {
           max="5"
           autoFocus
         />
-        <span className="hint warning">Typical: 2–5 hours</span>
+        <span className="hint warning">Typical: 2-5 hours</span>
       </div>
     </div>
   );

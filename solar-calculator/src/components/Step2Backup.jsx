@@ -1,13 +1,17 @@
+import Field from './ui/Field';
+
 const Step2Backup = ({ data, onChange }) => {
   return (
     <div className="step-content">
-      <h2>Step 2: Battery Settings</h2>
+      <span className="step-eyebrow">STEP 02 / 04</span>
+      <h2>BACKUP</h2>
       <p className="step-description">Configure your battery backup requirements</p>
-      
+
       <div className="form-group">
         <label htmlFor="backup_hours">Backup Hours (1-12)</label>
-        <input
+        <Field
           type="number"
+          mono
           id="backup_hours"
           name="backup_hours"
           value={data.backup_hours || ''}
@@ -33,7 +37,7 @@ const Step2Backup = ({ data, onChange }) => {
             />
             <span className="radio-label">Tubular (Lead Acid)</span>
           </label>
-          
+
           <label className={`radio-option ${data.battery_type === 'lithium' ? 'selected' : ''}`}>
             <input
               type="radio"

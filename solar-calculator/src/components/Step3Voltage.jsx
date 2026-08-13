@@ -43,9 +43,10 @@ const Step3Voltage = ({ data, onChange }) => {
 
   return (
     <div className="step-content">
-      <h2>Step 2: Inverter Switching Voltage</h2>
+      <span className="step-eyebrow">STEP 02 / 04</span>
+      <h2>INVERTER VOLTAGE</h2>
       <p className="step-description">Select your inverter voltage settings based on your battery system</p>
-      
+
       <div className="form-group">
         <label htmlFor="inverter_voltage">Inverter Voltage Setting</label>
         <select
@@ -91,11 +92,11 @@ const Step3Voltage = ({ data, onChange }) => {
       {/* Voltage Reference Guide */}
       <div className="form-group" style={{ marginTop: '20px' }}>
         <label>Quick Reference Guide</label>
-        <div style={{ fontSize: '0.85rem', color: '#666', lineHeight: '1.6' }}>
-          <p style={{ marginBottom: '8px' }}><strong>Lead Acid:</strong> Bulk 14.4V (12V) / 28.8V (24V) / 57.6V (48V)</p>
-          <p style={{ marginBottom: '8px' }}><strong>Float:</strong> 13.5V (12V) / 27.0V (24V) / 54.0V (48V)</p>
-          <p style={{ marginBottom: '8px' }}><strong>Lithium (LiFePO4):</strong> Full 14.6V / Cutoff 11.0V (12V)</p>
-          <p style={{ marginBottom: '8px' }}><strong>Low Voltage Disconnect:</strong> 10.5V (12V) / 21.0V (24V) / 42.0V (48V)</p>
+        <div className="voltage-reference">
+          <p><strong>Lead Acid:</strong> Bulk 14.4V (12V) / 28.8V (24V) / 57.6V (48V)</p>
+          <p><strong>Float:</strong> 13.5V (12V) / 27.0V (24V) / 54.0V (48V)</p>
+          <p><strong>Lithium (LiFePO4):</strong> Full 14.6V / Cutoff 11.0V (12V)</p>
+          <p><strong>Low Voltage Disconnect:</strong> 10.5V (12V) / 21.0V (24V) / 42.0V (48V)</p>
           <p><strong>LVD Restart:</strong> Should be ~1V higher than cutoff to prevent rapid fluctuation</p>
         </div>
       </div>

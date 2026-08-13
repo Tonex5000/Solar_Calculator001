@@ -1,0 +1,15 @@
+.panel {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  clip-path: var(--clip-panel);
+  position: relative;
+}
+
+.panel-accent-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 64px;
+  background: var(--color-green);
+}
