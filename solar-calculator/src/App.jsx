@@ -145,6 +145,7 @@ function App() {
       <div className="ambient-bg" aria-hidden="true" />
       <div className="container">
         <header className="header">
+          <div className="sq"></div>
           <span className="eyebrow">VOLTRA SYSTEM SIZING</span>
           <h1>LOAD <span className="accent">AUDIT</span></h1>
           <p>Calculate your solar power system requirements</p>
