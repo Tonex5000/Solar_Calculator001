@@ -311,7 +311,7 @@ def _extract_wattage_from_image(image_bytes: bytes, mime_type: str) -> dict:
                 }
             ],
             temperature=0,
-            max_tokens=500,
+            max_completion_tokens=500,
         )
     except Exception as exc:  # groq client raises its own exception types
         raise HTTPException(status_code=502, detail=f"Groq API error: {exc}") from exc
