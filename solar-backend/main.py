@@ -22,7 +22,7 @@ from groq import Groq
 BATTERY_RATED_VOLTAGE = 12  # 12V batteries for battery count estimation
 BATTERY_RATED_CAPACITY = 220  # 200Ah batteries
 
-GROQ_MODEL = "llama-3.1-8b-instant"
+GROQ_MODEL = "qwen/qwen3.6-27b"
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 
 
