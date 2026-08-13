@@ -9,6 +9,7 @@ import base64
 import json
 import math
 import os
+import re
 from math import ceil
 from typing import Literal, Optional
 
@@ -318,7 +319,15 @@ def _extract_wattage_from_image(image_bytes: bytes, mime_type: str) -> dict:
 
     raw = response.choices[0].message.content.strip()
 
-    if raw.startswith("```"):
+    # Reasoning models (like qwen3.6) emit a <think>...</think> block before
+    # the actual answer - strip it out if present.
+    raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
+
+    # Strip markdown code fences if present (```json ... ``` or ``` ... ```)
+    fence_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", raw, flags=re.DOTALL)
+    if fence_match:
+        raw = fence_match.group(1)
+    elif raw.startswith("```"):
         raw = raw.strip("`")
         if raw.lower().startswith("json"):
             raw = raw[4:].strip()
@@ -326,6 +335,14 @@ def _extract_wattage_from_image(image_bytes: bytes, mime_type: str) -> dict:
     try:
         return json.loads(raw)
     except json.JSONDecodeError:
+        # Last resort: grab the first {...} block found anywhere in the text
+        brace_match = re.search(r"\{.*\}", raw, flags=re.DOTALL)
+        if brace_match:
+            try:
+                return json.loads(brace_match.group(0))
+            except json.JSONDecodeError:
+                pass
+
         raise HTTPException(
             status_code=502,
             detail=f"Could not parse a JSON response from Groq. Raw response: {raw}",
