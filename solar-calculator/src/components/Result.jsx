@@ -161,7 +161,8 @@ const Result = ({ results, isLoading, error, onReset, formData }) => {
 
   return (
     <div className="step-content result-container">
-      <h2>Your Solar System Results</h2>
+      <span className="step-eyebrow">RESULTS</span>
+      <h2>YOUR SOLAR SYSTEM RESULTS</h2>
       <p className="step-description">Based on your inputs, here's your recommended solar setup:</p>
       
       <div className="results-grid">

@@ -1,3 +1,5 @@
+import Field from './ui/Field';
+
 const Step5Panel = ({ data, onChange }) => {
   const panels = [
     { value: '300', label: '300W' },
@@ -22,15 +24,16 @@ const Step5Panel = ({ data, onChange }) => {
 
   return (
     <div className="step-content">
-      <h2>Step 4: Panel Wattage</h2>
+      <span className="step-eyebrow">STEP 04 / 04</span>
+      <h2>PANEL</h2>
       <p className="step-description">Select your solar panel wattage</p>
-      
+
       <div className="form-group">
         <label>Panel Wattage</label>
         <div className="radio-group">
           {panels.map((panel) => (
-            <label 
-              key={panel.value} 
+            <label
+              key={panel.value}
               className={`radio-option ${data.panel_wattage === panel.value ? 'selected' : ''}`}
             >
               <input
@@ -43,7 +46,7 @@ const Step5Panel = ({ data, onChange }) => {
               <span className="radio-label">{panel.label}</span>
             </label>
           ))}
-          <label 
+          <label
             className={`radio-option ${isOtherSelected ? 'selected' : ''}`}
           >
             <input
@@ -56,12 +59,13 @@ const Step5Panel = ({ data, onChange }) => {
             <span className="radio-label">Other</span>
           </label>
         </div>
-        
+
         {isOtherSelected && (
           <div className="form-group" style={{ marginTop: '15px', marginLeft: '20px' }}>
             <label htmlFor="other_wattage">Enter Custom Wattage (W)</label>
-            <input
+            <Field
               type="number"
+              mono
               id="other_wattage"
               name="other_wattage"
               value={otherWattage}
@@ -73,7 +77,7 @@ const Step5Panel = ({ data, onChange }) => {
             <span className="hint">Enter the wattage of your custom panel</span>
           </div>
         )}
-        
+
         <span className="hint">Higher wattage panels generate more power but cost more</span>
       </div>
     </div>
