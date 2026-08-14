@@ -204,9 +204,11 @@ const analyzeImage = async (index, file) => {
 
   const { total } = calculateTotalLoad();
 
+  const inverterLoad = (total * 2) / 0.8;
+
   // Load meter calculations
   const recommendedTier = useMemo(() => {
-    return TIERS.find((t) => total <= t.watts) || TIERS[TIERS.length - 1];
+    return TIERS.find((t) => inverterLoad <= t.watts) || TIERS[TIERS.length - 1];
   }, [total]);
 
   const handleSubmit = () => {
