@@ -204,10 +204,14 @@ const analyzeImage = async (index, file) => {
 
   const { total } = calculateTotalLoad();
 
+  // Inverter sizing basis: oversize the connected load 2x (surge/headroom)
+  // and derate by 0.8 (power factor) -> inverter VA requirement.
+  const inverterLoad = (total * 2) / 0.8;
+
   // Load meter calculations
   const recommendedTier = useMemo(() => {
-    return TIERS.find((t) => total <= t.watts) || TIERS[TIERS.length - 1];
-  }, [total]);
+    return TIERS.find((t) => inverterLoad <= t.watts) || TIERS[TIERS.length - 1];
+  }, [inverterLoad]);
 
   const handleSubmit = () => {
     const { total, details } = calculateTotalLoad();
@@ -226,11 +230,11 @@ const analyzeImage = async (index, file) => {
 
   const litSegments = useMemo(() => {
     const maxWatts = TIERS[TIERS.length - 1].watts;
-    const ratio = Math.min(total / maxWatts, 1);
+    const ratio = Math.min(inverterLoad / maxWatts, 1);
     return Math.round(ratio * TOTAL_SEGMENTS);
-  }, [total]);
+  }, [inverterLoad]);
 
-  const isOverCapacity = total > TIERS[TIERS.length - 1].watts;
+  const isOverCapacity = inverterLoad > TIERS[TIERS.length - 1].watts;
 
   return (
     <div className="step-content">
