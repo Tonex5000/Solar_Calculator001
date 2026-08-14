@@ -1,0 +1,169 @@
+.parsed-preview {
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.parsed-preview-header {
+  margin-bottom: 16px;
+}
+
+.parsed-preview-header .step-eyebrow {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.parsed-preview-header .step-description {
+  margin: 0;
+}
+
+.parsed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.parsed-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  padding: 12px 14px;
+  transition: border-color 0.15s ease;
+}
+
+.parsed-row.dim {
+  opacity: 0.4;
+}
+
+.parsed-check input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-green);
+  cursor: pointer;
+}
+
+.parsed-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.parsed-appliance-name {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--color-text);
+  word-break: break-word;
+}
+
+.parsed-name .category-tag {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-faint);
+}
+
+.unmatched-tag {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--color-text-faint);
+  margin-left: 6px;
+}
+
+.parsed-inputs {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.parsed-inputs .hp-input,
+.parsed-inputs .w-input,
+.parsed-inputs .qty-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.parsed-inputs .w-input .field,
+.parsed-inputs .hp-input .field {
+  width: 84px;
+}
+
+.parsed-inputs .qty-input .field {
+  width: 56px;
+}
+
+.parsed-inputs .unit-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-faint);
+}
+
+.parsed-inputs .converted-wattage {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-green);
+}
+
+.parsed-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.parsed-actions .btn-outline {
+  background: transparent;
+  color: var(--color-text-dim);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 12px 20px;
+  border: 1px solid var(--color-border-strong);
+  cursor: pointer;
+}
+
+.parsed-actions .btn-outline:hover {
+  border-color: var(--color-green-dim);
+  color: var(--color-green);
+}
+
+.parsed-actions .btn-submit {
+  background: var(--color-green);
+  color: #0a0a0a;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 12px 24px;
+  border: none;
+  cursor: pointer;
+  clip-path: var(--clip-btn);
+}
+
+.parsed-actions .btn-submit:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .parsed-row {
+    grid-template-columns: auto 1fr;
+    gap: 10px 14px;
+  }
+  .parsed-inputs {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
