@@ -71,6 +71,11 @@ const TIERS = [
 
 const TOTAL_SEGMENTS = 20;
 
+// Subset of tiers shown as tick labels under the gauge. The full TIERS
+// table is still used for matching; only the display labels are reduced
+// to major reference points so the row stays legible.
+const MAJOR_TICKS = new Set([1, 2, 5, 10, 20, 50, 100, 200]);
+
 const Step1Load = ({ data, onChange, onNext }) => {
   const [appliances, setAppliances] = useState(
     data.appliances && data.appliances.length > 0
@@ -258,6 +263,17 @@ const analyzeImage = async (index, file) => {
 
   const isOverCapacity = inverterLoad > MAX_VA;
 
+  // Major tick that should appear active: the recommendation itself if it is
+  // a major tick, otherwise the largest major tick at or below it, so the
+  // active label tracks the gauge position across intermediate tiers.
+  const activeMajorTick = useMemo(() => {
+    const majors = TIERS.filter((t) => MAJOR_TICKS.has(t.kva));
+    const exact = majors.find((t) => t.kva === recommendedTier.kva);
+    if (exact) return exact.kva;
+    const below = [...majors].reverse().find((t) => t.kva <= recommendedTier.kva);
+    return below ? below.kva : majors[0].kva;
+  }, [recommendedTier]);
+
   return (
     <div className="step-content">
       <span className="step-eyebrow">STEP 01 / 04</span>
@@ -288,12 +304,12 @@ const analyzeImage = async (index, file) => {
           </div>
 
           <div className="tier-labels">
-            {TIERS.map((t) => (
+            {TIERS.filter((t) => MAJOR_TICKS.has(t.kva)).map((t) => (
               <span
                 key={t.kva}
-                className={recommendedTier.kva === t.kva ? 'active' : ''}
+                className={t.kva === activeMajorTick ? 'active' : ''}
               >
-                {t.kva}kVA ({t.voltage})
+                {t.kva}kVA
               </span>
             ))}
           </div>
