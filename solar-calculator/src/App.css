@@ -67,6 +67,12 @@ body {
   margin-bottom: 8px;
 }
 
+.eyebrow .sq{
+  width:8px; height:8px;
+  background:var(--green);
+  box-shadow:0 0 10px var(--green);
+}
+
 .header h1 {
   font-family: var(--font-display);
   font-weight: 800;
