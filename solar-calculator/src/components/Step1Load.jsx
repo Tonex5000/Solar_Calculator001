@@ -36,21 +36,37 @@ const APPLIANCES_DATA = [
 // Horsepower to Watt conversion (1 HP = 746 W)
 const HP_TO_WATT = 746;
 
-// Inverter tiers for load meter - extended to 50kVA with system voltage
-// Voltage based on standard inverter sizing chart
+// Inverter tiers for load meter - 1 kVA to 200 kVA with system voltage options.
+// `watts` is the derated (x0.8) continuous output; sizing uses kVA*1000 VA.
 const TIERS = [
   { kva: 1, watts: 800, voltage: '12V' },
+  { kva: 1.5, watts: 1200, voltage: '12V / 24V / 48V' },
   { kva: 2, watts: 1600, voltage: '24V' },
-  { kva: 3.5, watts: 2800, voltage: '24V' },
-  { kva: 5, watts: 4000, voltage: '48V' },
-  { kva: 7.5, watts: 6000, voltage: '96V' },
-  { kva: 10, watts: 8000, voltage: '120V' },
-  { kva: 15, watts: 12000, voltage: '180V / 240V' },
-  { kva: 20, watts: 16000, voltage: '360V' },
+  { kva: 2.5, watts: 2000, voltage: '12V / 24V / 48V' },
+  { kva: 3, watts: 2400, voltage: '24V / 48V' },
+  { kva: 3.5, watts: 2800, voltage: '24V / 48V' },
+  { kva: 4, watts: 3200, voltage: '48V' },
+  { kva: 5, watts: 4000, voltage: '48V / 96V' },
+  { kva: 6, watts: 4800, voltage: '48V' },
+  { kva: 7.5, watts: 6000, voltage: '48V / 120V' },
+  { kva: 8, watts: 6400, voltage: '48V / 96V' },
+  { kva: 10, watts: 8000, voltage: '48V / 120V / 180V' },
+  { kva: 12, watts: 9600, voltage: '48V / 96V / 120V / 180V' },
+  { kva: 15, watts: 12000, voltage: '48V / 96V / 120V / 360V' },
+  { kva: 18, watts: 14400, voltage: '48V / 96V / 120V / 192V / 240V / 360V' },
+  { kva: 20, watts: 16000, voltage: '120V / 192V / 360V' },
   { kva: 25, watts: 20000, voltage: '360V' },
-  { kva: 30, watts: 24000, voltage: '360V' },
-  { kva: 40, watts: 32000, voltage: '360V' },
+  { kva: 30, watts: 24000, voltage: '192V / 360V' },
+  { kva: 40, watts: 32000, voltage: '240V / 360V' },
+  { kva: 45, watts: 36000, voltage: '360V' },
   { kva: 50, watts: 40000, voltage: '360V' },
+  { kva: 60, watts: 48000, voltage: '360V' },
+  { kva: 80, watts: 64000, voltage: '360V' },
+  { kva: 100, watts: 80000, voltage: '360V' },
+  { kva: 125, watts: 100000, voltage: '360V' },
+  { kva: 150, watts: 120000, voltage: '360V' },
+  { kva: 180, watts: 144000, voltage: '360V' },
+  { kva: 200, watts: 160000, voltage: '360V' },
 ];
 
 const TOTAL_SEGMENTS = 20;
@@ -287,7 +303,7 @@ const analyzeImage = async (index, file) => {
               Recommended Inverter: <strong>{recommendedTier.kva} kVA</strong> | System Voltage: <strong>{recommendedTier.voltage}</strong>
             </span>
             {isOverCapacity && (
-              <span className="over-capacity-warning">Exceeds 50kVA - Custom setup required</span>
+              <span className="over-capacity-warning">Exceeds 200kVA - Custom setup required</span>
             )}
           </div>
         </div>
