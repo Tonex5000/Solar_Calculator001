@@ -204,12 +204,21 @@ const analyzeImage = async (index, file) => {
 
   const { total } = calculateTotalLoad();
 
+  // Inverter sizing basis: oversize the connected load 2x (surge/headroom)
+  // and derate by 0.8 (power factor) -> inverter VA requirement.
   const inverterLoad = (total * 2) / 0.8;
+
+  // Each tier's true capacity is kVA * 1000 VA (the 0.8 power factor is
+  // already accounted for in `inverterLoad`, so we match against the
+  // clean VA capacity, not the pre-derated `watts` ceiling, to avoid
+  // applying 0.8 twice).
+  const tierCapacity = (t) => t.kva * 1000;
+  const MAX_VA = tierCapacity(TIERS[TIERS.length - 1]);
 
   // Load meter calculations
   const recommendedTier = useMemo(() => {
-    return TIERS.find((t) => inverterLoad <= t.watts) || TIERS[TIERS.length - 1];
-  }, [total]);
+    return TIERS.find((t) => inverterLoad <= tierCapacity(t)) || TIERS[TIERS.length - 1];
+  }, [inverterLoad]);
 
   const handleSubmit = () => {
     const { total, details } = calculateTotalLoad();
@@ -227,12 +236,11 @@ const analyzeImage = async (index, file) => {
   };
 
   const litSegments = useMemo(() => {
-    const maxWatts = TIERS[TIERS.length - 1].watts;
-    const ratio = Math.min(total / maxWatts, 1);
+    const ratio = Math.min(inverterLoad / MAX_VA, 1);
     return Math.round(ratio * TOTAL_SEGMENTS);
-  }, [total]);
+  }, [inverterLoad]);
 
-  const isOverCapacity = total > TIERS[TIERS.length - 1].watts;
+  const isOverCapacity = inverterLoad > MAX_VA;
 
   return (
     <div className="step-content">
