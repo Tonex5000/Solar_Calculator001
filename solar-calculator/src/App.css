@@ -596,7 +596,7 @@ select:focus-visible,
 }
 
 .btn-submit:disabled {
-  opacity: 0.4;
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
