@@ -1,0 +1,124 @@
+.voice-tab {
+  display: flex;
+  flex-direction: column;
+}
+
+.voice-panel {
+  text-align: center;
+  padding: 24px 0 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mic-btn {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: var(--color-panel-2);
+  border: 2px solid var(--color-green);
+  box-shadow: 0 0 0 6px var(--color-green-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0 auto 18px;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.mic-btn:hover:not(:disabled) {
+  transform: scale(1.04);
+}
+
+.mic-btn.rec {
+  animation: mic-pulse 1.4s ease-in-out infinite;
+}
+
+.mic-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mic-btn svg {
+  width: 28px;
+  height: 28px;
+  stroke: var(--color-green);
+}
+
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 6px var(--color-green-glow); }
+  50% { box-shadow: 0 0 0 12px rgba(118, 185, 0, 0.08); }
+}
+
+.voice-state {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+  margin-bottom: 24px;
+  min-height: 18px;
+}
+
+.voice-state .rec {
+  color: var(--color-green);
+}
+
+.transcript {
+  text-align: left;
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-border);
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--color-text-dim);
+  min-height: 70px;
+  margin-bottom: 16px;
+  width: 100%;
+  max-width: 560px;
+  word-break: break-word;
+}
+
+.voice-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.voice-actions .btn-outline {
+  background: transparent;
+  color: var(--color-text-dim);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 12px 20px;
+  border: 1px solid var(--color-border-strong);
+  cursor: pointer;
+}
+
+.voice-actions .btn-outline:hover {
+  border-color: var(--color-green-dim);
+  color: var(--color-green);
+}
+
+.voice-actions .btn-submit {
+  background: var(--color-green);
+  color: #0a0a0a;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 12px 24px;
+  border: none;
+  cursor: pointer;
+  clip-path: var(--clip-btn);
+}
+
+.voice-actions .btn-submit:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

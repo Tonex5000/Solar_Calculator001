@@ -377,6 +377,295 @@ async def analyze_adapter(file: UploadFile = File(...)) -> AdapterAnalysisOutput
     return AdapterAnalysisOutput(**result)
 
 
+# ---------------------------------------------------------------------------
+# Appliance parsing from free text / transcripts (Groq LLM)
+# ---------------------------------------------------------------------------
+
+# The catalog the frontend's manual search uses. Embedded in the prompt so the
+# LLM returns the correct category + multiplier + usesHp for each appliance it
+# recognises, making parsed rows mathematically identical to manual selection.
+APPLIANCE_CATALOG = [
+    {"name": "Air Conditioner", "category": "Inductive", "multiplier": 3, "usesHp": True},
+    {"name": "Refrigerator", "category": "Inductive", "multiplier": 3, "usesHp": False},
+    {"name": "Washing Machine", "category": "Inductive", "multiplier": 3, "usesHp": False},
+    {"name": "Ceiling Fan", "category": "Inductive", "multiplier": 3, "usesHp": False},
+    {"name": "Exhaust Fan", "category": "Inductive", "multiplier": 3, "usesHp": False},
+    {"name": "Vacuum Cleaner", "category": "Inductive", "multiplier": 3, "usesHp": False},
+    {"name": "Dishwasher", "category": "Inductive", "multiplier": 3, "usesHp": False},
+    {"name": "Water Pump", "category": "Inductive", "multiplier": 3, "usesHp": True},
+    {"name": "Inverter AC", "category": "Inductive", "multiplier": 3, "usesHp": True},
+    {"name": "Hair Dryer", "category": "Inductive", "multiplier": 3, "usesHp": False},
+    {"name": "Electric Heater", "category": "Resistive", "multiplier": 4, "usesHp": False},
+    {"name": "Electric Kettle", "category": "Resistive", "multiplier": 4, "usesHp": False},
+    {"name": "Toaster", "category": "Resistive", "multiplier": 4, "usesHp": False},
+    {"name": "Electric Stove", "category": "Resistive", "multiplier": 4, "usesHp": False},
+    {"name": "Electric Oven", "category": "Resistive", "multiplier": 4, "usesHp": False},
+    {"name": "Incandescent Bulb", "category": "Resistive", "multiplier": 4, "usesHp": False},
+    {"name": "Iron (Electric)", "category": "Resistive", "multiplier": 4, "usesHp": False},
+    {"name": "Microwave Oven", "category": "Resistive", "multiplier": 4, "usesHp": False},
+    {"name": "LED Light", "category": "Nonlinear", "multiplier": 1, "usesHp": False},
+    {"name": "CFL Light", "category": "Nonlinear", "multiplier": 1, "usesHp": False},
+    {"name": "LED TV", "category": "Nonlinear", "multiplier": 1, "usesHp": False},
+    {"name": "Computer", "category": "Nonlinear", "multiplier": 1, "usesHp": False},
+    {"name": "Laptop", "category": "Nonlinear", "multiplier": 1, "usesHp": False},
+    {"name": "Phone Charger", "category": "Nonlinear", "multiplier": 1, "usesHp": False},
+]
+
+# Categories that don't appear in the catalog but are valid load types; the LLM
+# may report these for an unrecognised appliance and the frontend applies the
+# matching multiplier.
+CATEGORY_MULTIPLIERS = {"Inductive": 3, "Resistive": 4, "Nonlinear": 1}
+
+
+class ParseTextRequest(BaseModel):
+    """Free-text appliance list (one per line or natural language)."""
+
+    text: str = Field(..., description="Free text describing appliances and quantities")
+
+
+class ParsedAppliance(BaseModel):
+    """One appliance extracted from free text."""
+
+    name: str = Field(..., description="Canonical appliance name (matched to catalog if possible)")
+    category: str = Field(..., description="Inductive | Resistive | Nonlinear")
+    multiplier: int = Field(..., description="Surge multiplier (3/4/1)")
+    wattage: Optional[float] = Field(None, description="Watts per unit, if stated or estimable")
+    horsepower: Optional[float] = Field(None, description="Horsepower, if stated (use null otherwise)")
+    quantity: int = Field(1, ge=1, description="Number of units")
+    uses_hp: bool = Field(False, description="Whether this appliance is sized by horsepower")
+    matched: bool = Field(False, description="True if name matched the known catalog")
+
+
+class ParseTextResponse(BaseModel):
+    """Structured list of appliances parsed from free text."""
+
+    appliances: list[ParsedAppliance] = Field(default_factory=list)
+
+
+def _build_parse_prompt(user_text: str) -> str:
+    catalog_lines = "\n".join(
+        f"- {a['name']} | category={a['category']} | multiplier={a['multiplier']} | usesHp={str(a['usesHp']).lower()}"
+        for a in APPLIANCE_CATALOG
+    )
+    return (
+        "You are an assistant that extracts a list of electrical appliances from "
+        "free text (typed lists, transcribed speech, or text extracted from a PDF). "
+        "For each distinct appliance the user mentions, return one entry. "
+        "Match each appliance to the known catalog below when possible; for a match "
+        "use the EXACT catalog name, category, multiplier and usesHp. For an "
+        "appliance not in the catalog, infer its category (Inductive for motors/"
+        "compressors, Resistive for heating elements, Nonlinear for electronics), "
+        "set matched=false, and give multiplier from the category "
+        "(Inductive=3, Resistive=4, Nonlinear=1).\n\n"
+        "Known catalog (name | category | multiplier | usesHp):\n"
+        f"{catalog_lines}\n\n"
+        "Rules:\n"
+        "- wattage: the per-unit watts if the user states it (e.g. '75W', '1500W'). "
+        "If they give horsepower, leave wattage null and set horsepower instead.\n"
+        "- horsepower: only set when the user gives HP (e.g. '1.5HP', '1.5 hp'). "
+        "For an appliance whose usesHp is true and the user gives no HP, leave horsepower null.\n"
+        "- quantity: number of units (default 1). Phrases like 'two fans', '3x fridge', "
+        "'Qty 3' all mean quantity 3.\n"
+        "- If a number like '1.5HP' appears, that is horsepower NOT quantity.\n\n"
+        "Return ONLY a valid JSON object, no extra text, no markdown fences, in this shape:\n"
+        "{\n"
+        '  "appliances": [\n'
+        '    {"name":"Ceiling Fan","category":"Inductive","multiplier":3,'
+        '"wattage":75,"horsepower":null,"quantity":3,"uses_hp":false,"matched":true}\n'
+        "  ]\n"
+        "}\n\n"
+        f"User text:\n{user_text}"
+    )
+
+
+def _clean_llm_json(raw: str) -> str:
+    """Strip <think> blocks and markdown fences, isolate the JSON object."""
+    raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
+    fence = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", raw, flags=re.DOTALL)
+    if fence:
+        return fence.group(1)
+    if raw.startswith("```"):
+        raw = raw.strip("`")
+        if raw.lower().startswith("json"):
+            raw = raw[4:].strip()
+    return raw
+
+
+def _parse_appliances_from_text(user_text: str) -> list[dict]:
+    """Call Groq to turn free text into a structured appliance list."""
+    if not user_text.strip():
+        raise HTTPException(status_code=400, detail="Text cannot be empty")
+
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        raise HTTPException(
+            status_code=500,
+            detail="GROQ_API_KEY is not configured on the server",
+        )
+
+    client = Groq(api_key=api_key)
+    prompt = _build_parse_prompt(user_text)
+
+    try:
+        response = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,
+            max_completion_tokens=1500,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Groq API error: {exc}") from exc
+
+    raw = response.choices[0].message.content.strip()
+    cleaned = _clean_llm_json(raw)
+
+    try:
+        data = json.loads(cleaned)
+    except json.JSONDecodeError:
+        brace = re.search(r"\{.*\}", cleaned, flags=re.DOTALL)
+        if brace:
+            try:
+                data = json.loads(brace.group(0))
+            except json.JSONDecodeError:
+                data = None
+        else:
+            data = None
+
+    if not isinstance(data, dict) or "appliances" not in data:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Could not parse a JSON response from Groq. Raw: {raw[:500]}",
+        )
+
+    appliances = data.get("appliances") or []
+
+    # Normalise + coerce types so the response validates even if the LLM is loose.
+    normalised = []
+    for a in appliances:
+        if not isinstance(a, dict) or not a.get("name"):
+            continue
+        category = str(a.get("category", "Nonlinear")).title()
+        if category not in CATEGORY_MULTIPLIERS:
+            category = "Nonlinear"
+        multiplier = a.get("multiplier")
+        if not isinstance(multiplier, int) or multiplier not in (1, 3, 4):
+            multiplier = CATEGORY_MULTIPLIERS[category]
+        qty = a.get("quantity", 1)
+        try:
+            qty = max(1, int(qty))
+        except (TypeError, ValueError):
+            qty = 1
+        wattage = a.get("wattage")
+        try:
+            wattage = float(wattage) if wattage is not None else None
+        except (TypeError, ValueError):
+            wattage = None
+        horsepower = a.get("horsepower")
+        try:
+            horsepower = float(horsepower) if horsepower is not None else None
+        except (TypeError, ValueError):
+            horsepower = None
+        normalised.append(
+            {
+                "name": str(a["name"]),
+                "category": category,
+                "multiplier": multiplier,
+                "wattage": wattage,
+                "horsepower": horsepower,
+                "quantity": qty,
+                "uses_hp": bool(a.get("uses_hp", False)),
+                "matched": bool(a.get("matched", False)),
+            }
+        )
+
+    return normalised
+
+
+@app.post(
+    "/parse-text",
+    response_model=ParseTextResponse,
+    tags=["Appliance Parsing"],
+    summary="Parse a free-text appliance list into structured appliances",
+    description=(
+        "Accepts free text (typed list, transcribed speech, or text extracted "
+        "from a PDF) and returns a structured list of appliances, each matched "
+        "to the known catalog where possible so category and surge multiplier "
+        "are filled in. The frontend shows a confirm step before adding them."
+    ),
+)
+async def parse_text(request: ParseTextRequest) -> ParseTextResponse:
+    appliances = _parse_appliances_from_text(request.text)
+    return ParseTextResponse(appliances=[ParsedAppliance(**a) for a in appliances])
+
+
+# ---------------------------------------------------------------------------
+# Voice transcription (Groq Whisper)
+# ---------------------------------------------------------------------------
+
+GROQ_AUDIO_MODEL = "whisper-large-v3"
+ALLOWED_AUDIO_TYPES = {
+    "audio/webm",
+    "audio/wav",
+    "audio/mpeg",
+    "audio/mp3",
+    "audio/mp4",
+    "audio/ogg",
+}
+
+
+class TranscriptionResponse(BaseModel):
+    """Transcribed text from an audio recording."""
+
+    text: str = Field(..., description="Transcribed text from the audio")
+
+
+@app.post(
+    "/transcribe",
+    response_model=TranscriptionResponse,
+    tags=["Voice"],
+    summary="Transcribe an audio recording to text",
+    description=(
+        "Accepts an audio file (recorded in-browser via MediaRecorder) and "
+        "returns the transcribed text using Groq's Whisper model. The frontend "
+        "then sends that text to /parse-text to extract appliances."
+    ),
+)
+async def transcribe(file: UploadFile = File(...)) -> TranscriptionResponse:
+    if file.content_type not in ALLOWED_AUDIO_TYPES:
+        # MediaRecorder on Chrome defaults to audio/webm; be lenient if the
+        # declared type is missing or unusual.
+        if not file.content_type or not file.content_type.startswith("audio/"):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported file type '{file.content_type}'. Allowed: {sorted(ALLOWED_AUDIO_TYPES)}",
+            )
+
+    audio_bytes = await file.read()
+    if not audio_bytes:
+        raise HTTPException(status_code=400, detail="Uploaded audio is empty")
+
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        raise HTTPException(
+            status_code=500,
+            detail="GROQ_API_KEY is not configured on the server",
+        )
+
+    client = Groq(api_key=api_key)
+    filename = file.filename or "recording.webm"
+
+    try:
+        # Groq's transcription endpoint takes a file-like object + filename.
+        response = client.audio.transcriptions.create(
+            model=GROQ_AUDIO_MODEL,
+            file=(filename, audio_bytes),
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Groq API error: {exc}") from exc
+
+    return TranscriptionResponse(text=response.text)
+
+
 if __name__ == "__main__":
     import uvicorn
 

@@ -267,6 +267,74 @@ select:focus-visible,
   flex: 0 0 auto;
 }
 
+/* ==================== INPUT MODE TABS ==================== */
+.mode-tabs {
+  display: flex;
+  gap: 28px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.mode-tab {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 0 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.15s ease;
+}
+
+.mode-tab svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.7;
+}
+
+.mode-tab:hover:not(:disabled) {
+  color: var(--color-text-dim);
+}
+
+.mode-tab.active {
+  color: var(--color-green);
+}
+
+.mode-tab.active svg {
+  opacity: 1;
+}
+
+.mode-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--color-green);
+  box-shadow: 0 0 8px var(--color-green);
+}
+
+.mode-tab:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.mode-tab .tag {
+  font-size: 9px;
+  padding: 1px 6px;
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-faint);
+  letter-spacing: 0.05em;
+}
+
 /* ==================== LOAD METER ==================== */
 .load-meter {
   background: var(--color-panel-2);
@@ -305,7 +373,7 @@ select:focus-visible,
   display: flex;
   gap: 3px;
   height: 14px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .gauge-segment {
@@ -315,13 +383,16 @@ select:focus-visible,
 
 .tier-labels {
   display: flex;
-  justify-content: space-between;
+  gap: 3px;
   font-family: var(--font-mono);
   font-size: 0.62rem;
   color: var(--color-text-faint);
   margin-bottom: 12px;
-  flex-wrap: wrap;
-  gap: 2px;
+}
+
+.tier-labels span {
+  flex: 1;
+  text-align: center;
 }
 
 .tier-labels span.active {

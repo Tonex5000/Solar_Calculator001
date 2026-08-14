@@ -1,5 +1,9 @@
 import { useState, useRef, useMemo } from 'react';
 import Field from './ui/Field';
+import TextTab from './TextTab';
+import VoiceTab from './VoiceTab';
+import PdfTab from './PdfTab';
+import ParsedPreview from './ParsedPreview';
 
 // Appliance data from PDF with categorized load types
 // Rules: "Nonlinear + Resistive" = Resistive, "Resistive + Inductive" = Inductive, "Inductive + Nonlinear" = Inductive
@@ -69,12 +73,14 @@ const TIERS = [
   { kva: 200, watts: 160000, voltage: '360V' },
 ];
 
-const TOTAL_SEGMENTS = 20;
-
 // Subset of tiers shown as tick labels under the gauge. The full TIERS
 // table is still used for matching; only the display labels are reduced
 // to major reference points so the row stays legible.
 const MAJOR_TICKS = new Set([1, 2, 5, 10, 20, 50, 100, 200]);
+// Tiers that own a visible segment + label, in ascending order. The
+// segmented indicator has one segment per entry here, aligned 1:1 with
+// the labels, so the lit fill tracks the tick values underneath it.
+const MAJOR_TIERS = TIERS.filter((t) => MAJOR_TICKS.has(t.kva));
 
 const Step1Load = ({ data, onChange, onNext }) => {
   const [appliances, setAppliances] = useState(
@@ -86,6 +92,12 @@ const Step1Load = ({ data, onChange, onNext }) => {
   const [showSuggestions, setShowSuggestions] = useState({});
   const [analyzingIndex, setAnalyzingIndex] = useState(null);
   const [analysisResult, setAnalysisResult] = useState(null);
+
+  // Input-method tabs. The shared `appliances` list is the single source of
+  // truth for the load meter and Submit, regardless of which tab produced it.
+  const [activeMode, setActiveMode] = useState('manual');
+  // Parsed rows staged from Text/Voice/PDF, awaiting confirmation.
+  const [parsedRows, setParsedRows] = useState(null);
 
   const fileInputRefs = useRef({});
 
@@ -188,6 +200,23 @@ const analyzeImage = async (index, file) => {
     ]);
   };
 
+  // Text / Voice / PDF all funnel through this: the parsed rows are staged for
+  // confirmation, then merged into the shared appliances[] list.
+  const handleParsed = (rows) => {
+    setParsedRows(rows);
+  };
+
+  const confirmParsed = (confirmedRows) => {
+    // Append confirmed rows, replacing any placeholder empty row so the user
+    // isn't left with a blank manual row after an import.
+    const base = appliances.filter((a) => a.applianceName || a.wattage);
+    setAppliances([...base, ...confirmedRows]);
+    setParsedRows(null);
+    setActiveMode('manual');
+  };
+
+  const cancelParsed = () => setParsedRows(null);
+
   const removeAppliance = (index) => {
     if (appliances.length > 1) {
       setAppliances(appliances.filter((_, i) => i !== index));
@@ -256,23 +285,25 @@ const analyzeImage = async (index, file) => {
     onNext();
   };
 
-  const litSegments = useMemo(() => {
-    const ratio = Math.min(inverterLoad / MAX_VA, 1);
-    return Math.round(ratio * TOTAL_SEGMENTS);
-  }, [inverterLoad]);
-
-  const isOverCapacity = inverterLoad > MAX_VA;
-
   // Major tick that should appear active: the recommendation itself if it is
   // a major tick, otherwise the largest major tick at or below it, so the
   // active label tracks the gauge position across intermediate tiers.
   const activeMajorTick = useMemo(() => {
-    const majors = TIERS.filter((t) => MAJOR_TICKS.has(t.kva));
-    const exact = majors.find((t) => t.kva === recommendedTier.kva);
+    const exact = MAJOR_TIERS.find((t) => t.kva === recommendedTier.kva);
     if (exact) return exact.kva;
-    const below = [...majors].reverse().find((t) => t.kva <= recommendedTier.kva);
-    return below ? below.kva : majors[0].kva;
+    const below = [...MAJOR_TIERS].reverse().find((t) => t.kva <= recommendedTier.kva);
+    return below ? below.kva : MAJOR_TIERS[0].kva;
   }, [recommendedTier]);
+
+  // Segmented indicator: one segment per major tick, aligned 1:1 with the
+  // labels below. Light every segment up to and including the active tick,
+  // so the fill follows the tick values rather than a linear watt scale.
+  const MAX_TICK = MAJOR_TIERS[MAJOR_TIERS.length - 1].kva;
+  const litSegments = useMemo(() => {
+    return MAJOR_TIERS.findIndex((t) => t.kva === activeMajorTick) + 1;
+  }, [activeMajorTick]);
+
+  const isOverCapacity = recommendedTier.kva >= MAX_TICK && inverterLoad > MAX_VA;
 
   return (
     <div className="step-content">
@@ -292,9 +323,9 @@ const analyzeImage = async (index, file) => {
           </div>
 
           <div className="gauge">
-            {Array.from({ length: TOTAL_SEGMENTS }).map((_, i) => (
+            {MAJOR_TIERS.map((t, i) => (
               <div
-                key={i}
+                key={t.kva}
                 className={`gauge-segment ${i < litSegments ? 'lit' : ''}`}
                 style={{
                   background: i < litSegments ? (isOverCapacity ? '#ef4444' : 'var(--color-green)') : 'rgba(255,255,255,0.1)',
@@ -304,7 +335,7 @@ const analyzeImage = async (index, file) => {
           </div>
 
           <div className="tier-labels">
-            {TIERS.filter((t) => MAJOR_TICKS.has(t.kva)).map((t) => (
+            {MAJOR_TIERS.map((t) => (
               <span
                 key={t.kva}
                 className={t.kva === activeMajorTick ? 'active' : ''}
@@ -325,6 +356,42 @@ const analyzeImage = async (index, file) => {
         </div>
       )}
 
+      {/* Input-method tabs. The load meter above is mode-agnostic. */}
+      <div className="mode-tabs">
+        {[
+          { id: 'manual', label: 'Manual', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
+          { id: 'text', label: 'Text', icon: 'M4 6h16M4 12h16M4 18h10' },
+          { id: 'pdf', label: 'PDF', icon: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6' },
+          { id: 'voice', label: 'Voice', icon: 'M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3zM19 10v2a7 7 0 01-14 0v-2M12 19v4', beta: true },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            className={`mode-tab ${activeMode === tab.id ? 'active' : ''}`}
+            onClick={() => setActiveMode(tab.id)}
+            disabled={!!parsedRows}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d={tab.icon} />
+            </svg>
+            {tab.label}
+            {tab.beta && <span className="tag">Beta</span>}
+          </button>
+        ))}
+      </div>
+
+      {/* Parsed-appliance confirmation (Text / Voice / PDF). */}
+      {parsedRows ? (
+        <ParsedPreview
+          parsed={parsedRows}
+          onConfirm={confirmParsed}
+          onCancel={cancelParsed}
+        />
+      ) : (
+        <>
+      {/* MANUAL */}
+      {activeMode === 'manual' && (
+      <>
       {/* Main Appliance Card */}
       <div className="appliance-card">
         {/* Table Header */}
@@ -459,6 +526,25 @@ const analyzeImage = async (index, file) => {
       <button type="button" className="btn-add" onClick={addAppliance}>
         + Add more appliances
       </button>
+      </>
+      )}
+
+      {/* TEXT */}
+      {activeMode === 'text' && (
+        <TextTab onParsed={handleParsed} />
+      )}
+
+      {/* VOICE */}
+      {activeMode === 'voice' && (
+        <VoiceTab onParsed={handleParsed} />
+      )}
+
+      {/* PDF */}
+      {activeMode === 'pdf' && (
+        <PdfTab onParsed={handleParsed} />
+      )}
+        </>
+      )}
 
       <button
         type="button"
