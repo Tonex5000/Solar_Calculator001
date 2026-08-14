@@ -305,7 +305,7 @@ select:focus-visible,
   display: flex;
   gap: 3px;
   height: 14px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .gauge-segment {
@@ -315,13 +315,16 @@ select:focus-visible,
 
 .tier-labels {
   display: flex;
-  justify-content: space-between;
+  gap: 3px;
   font-family: var(--font-mono);
   font-size: 0.62rem;
   color: var(--color-text-faint);
   margin-bottom: 12px;
-  flex-wrap: wrap;
-  gap: 2px;
+}
+
+.tier-labels span {
+  flex: 1;
+  text-align: center;
 }
 
 .tier-labels span.active {

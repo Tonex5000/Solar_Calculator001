@@ -69,12 +69,14 @@ const TIERS = [
   { kva: 200, watts: 160000, voltage: '360V' },
 ];
 
-const TOTAL_SEGMENTS = 20;
-
 // Subset of tiers shown as tick labels under the gauge. The full TIERS
 // table is still used for matching; only the display labels are reduced
 // to major reference points so the row stays legible.
 const MAJOR_TICKS = new Set([1, 2, 5, 10, 20, 50, 100, 200]);
+// Tiers that own a visible segment + label, in ascending order. The
+// segmented indicator has one segment per entry here, aligned 1:1 with
+// the labels, so the lit fill tracks the tick values underneath it.
+const MAJOR_TIERS = TIERS.filter((t) => MAJOR_TICKS.has(t.kva));
 
 const Step1Load = ({ data, onChange, onNext }) => {
   const [appliances, setAppliances] = useState(
@@ -256,23 +258,25 @@ const analyzeImage = async (index, file) => {
     onNext();
   };
 
-  const litSegments = useMemo(() => {
-    const ratio = Math.min(inverterLoad / MAX_VA, 1);
-    return Math.round(ratio * TOTAL_SEGMENTS);
-  }, [inverterLoad]);
-
-  const isOverCapacity = inverterLoad > MAX_VA;
-
   // Major tick that should appear active: the recommendation itself if it is
   // a major tick, otherwise the largest major tick at or below it, so the
   // active label tracks the gauge position across intermediate tiers.
   const activeMajorTick = useMemo(() => {
-    const majors = TIERS.filter((t) => MAJOR_TICKS.has(t.kva));
-    const exact = majors.find((t) => t.kva === recommendedTier.kva);
+    const exact = MAJOR_TIERS.find((t) => t.kva === recommendedTier.kva);
     if (exact) return exact.kva;
-    const below = [...majors].reverse().find((t) => t.kva <= recommendedTier.kva);
-    return below ? below.kva : majors[0].kva;
+    const below = [...MAJOR_TIERS].reverse().find((t) => t.kva <= recommendedTier.kva);
+    return below ? below.kva : MAJOR_TIERS[0].kva;
   }, [recommendedTier]);
+
+  // Segmented indicator: one segment per major tick, aligned 1:1 with the
+  // labels below. Light every segment up to and including the active tick,
+  // so the fill follows the tick values rather than a linear watt scale.
+  const MAX_TICK = MAJOR_TIERS[MAJOR_TIERS.length - 1].kva;
+  const litSegments = useMemo(() => {
+    return MAJOR_TIERS.findIndex((t) => t.kva === activeMajorTick) + 1;
+  }, [activeMajorTick]);
+
+  const isOverCapacity = recommendedTier.kva >= MAX_TICK && inverterLoad > MAX_VA;
 
   return (
     <div className="step-content">
@@ -292,9 +296,9 @@ const analyzeImage = async (index, file) => {
           </div>
 
           <div className="gauge">
-            {Array.from({ length: TOTAL_SEGMENTS }).map((_, i) => (
+            {MAJOR_TIERS.map((t, i) => (
               <div
-                key={i}
+                key={t.kva}
                 className={`gauge-segment ${i < litSegments ? 'lit' : ''}`}
                 style={{
                   background: i < litSegments ? (isOverCapacity ? '#ef4444' : 'var(--color-green)') : 'rgba(255,255,255,0.1)',
@@ -304,7 +308,7 @@ const analyzeImage = async (index, file) => {
           </div>
 
           <div className="tier-labels">
-            {TIERS.filter((t) => MAJOR_TICKS.has(t.kva)).map((t) => (
+            {MAJOR_TIERS.map((t) => (
               <span
                 key={t.kva}
                 className={t.kva === activeMajorTick ? 'active' : ''}
