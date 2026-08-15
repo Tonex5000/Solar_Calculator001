@@ -384,19 +384,21 @@ async def analyze_adapter(file: UploadFile = File(...)) -> AdapterAnalysisOutput
 # The catalog the frontend's manual search uses. Embedded in the prompt so the
 # LLM returns the correct category + multiplier + usesHp for each appliance it
 # recognises, making parsed rows mathematically identical to manual selection.
+# Catalog with typical_watts: a catalog match with no stated spec gets a fixed,
+# auditable default instead of whatever the LLM feels like guessing that call.
 APPLIANCE_CATALOG = [
     {"name": "Air Conditioner",   "category": "Inductive", "multiplier": 3, "usesHp": True,  "typical_watts": 1500},
     {"name": "Refrigerator",      "category": "Inductive", "multiplier": 3, "usesHp": False, "typical_watts": 150},
-    {"name": "Washing Machine",   "category": "Inductive", "multiplier": 3, "usesHp": False, "typical_watts": 500},
+    {"name": "Washing Machine",  "category": "Inductive", "multiplier": 3, "usesHp": False, "typical_watts": 500},
     {"name": "Ceiling Fan",       "category": "Inductive", "multiplier": 3, "usesHp": False, "typical_watts": 75},
     {"name": "Exhaust Fan",       "category": "Inductive", "multiplier": 3, "usesHp": False, "typical_watts": 60},
     {"name": "Vacuum Cleaner",    "category": "Inductive", "multiplier": 3, "usesHp": False, "typical_watts": 800},
     {"name": "Dishwasher",        "category": "Inductive", "multiplier": 3, "usesHp": False, "typical_watts": 1200},
-    {"name": "Water Pump",        "category": "Inductive", "multiplier": 3, "usesHp": True,  "typical_watts": None},  # too variable — see NEVER_ESTIMATE below
+    {"name": "Water Pump",        "category": "Inductive", "multiplier": 3, "usesHp": True,  "typical_watts": None},  # too variable — see NEVER_DEFAULT below
     {"name": "Inverter AC",       "category": "Inductive", "multiplier": 3, "usesHp": True,  "typical_watts": 1200},
     {"name": "Hair Dryer",        "category": "Inductive", "multiplier": 3, "usesHp": False, "typical_watts": 1200},
     {"name": "Electric Heater",   "category": "Resistive", "multiplier": 4, "usesHp": False, "typical_watts": 1500},
-    {"name": "Electric Kettle",   "category": "Resistive", "multiplier": 4, "usesHp": False, "typical_watts": 1500},
+    {"name": "Electric Kettle",  "category": "Resistive", "multiplier": 4, "usesHp": False, "typical_watts": 1500},
     {"name": "Toaster",           "category": "Resistive", "multiplier": 4, "usesHp": False, "typical_watts": 800},
     {"name": "Electric Stove",    "category": "Resistive", "multiplier": 4, "usesHp": False, "typical_watts": 2000},
     {"name": "Electric Oven",     "category": "Resistive", "multiplier": 4, "usesHp": False, "typical_watts": 2000},
@@ -414,54 +416,63 @@ APPLIANCE_CATALOG = [
     {"name": "Photocopy Machine", "category": "Nonlinear", "multiplier": 1, "usesHp": False, "typical_watts": 1200},
 ]
 CATALOG_BY_NAME = {a["name"]: a for a in APPLIANCE_CATALOG}
+
+# Categories that don't appear in the catalog but are valid load types; the LLM
+# may report these for an unrecognised appliance and the frontend applies the
+# matching multiplier.
 CATEGORY_MULTIPLIERS = {"Inductive": 3, "Resistive": 4, "Nonlinear": 1}
- 
+
 # Types whose real running wattage varies too widely to default from a catalog
 # figure at all — these must always come from an explicit stated spec or be
 # flagged NEEDS_INPUT, never silently filled from "typical_watts".
 NEVER_DEFAULT = {"Water Pump"}
- 
-# Conversion constants — same role as HP_TO_WATT already in your frontend.
+
+# Conversion constants — same role as HP_TO_WATT already in the frontend.
 # Keep these as named, editable values; different jobs will disagree with them.
 AMP_TO_WATT_VOLTAGE = 240   # single-phase 220-240V mains, unity power factor assumed
 AC_EER_ASSUMED = 10         # for BTU-rated units with no amps/watts given
- 
+
 AMP_RE = re.compile(r'(\d+(?:\.\d+)?)\s*a(?:mp)?s?\b', re.IGNORECASE)
 BTU_RE = re.compile(r'(\d+(?:\.\d+)?)\s*btu\b', re.IGNORECASE)
-# See note above the earlier load_parser.py: "ph" is ambiguous (phase vs a typo
-# for "hp") and must never be silently resolved either way.
+# "ph" is ambiguous (phase vs a typo for "hp") and must never be silently
+# resolved either way.
 PH_AMBIGUOUS_RE = re.compile(r'\b(\d+(?:\.\d+)?)\s*ph\b(?!ase)', re.IGNORECASE)
- 
- 
-# ---------------------------------------------------------------------------
-# 2. MODEL — extend ParsedAppliance with the new fields. `source` is what the
-#    frontend uses to render the confidence badge; `flagged_outlier` and
-#    `ambiguous` drive the two new UI states in ParsedPreview.jsx.
-# ---------------------------------------------------------------------------
+
+
+class ParseTextRequest(BaseModel):
+    """Free-text appliance list (one per line or natural language)."""
+
+    text: str = Field(..., description="Free text describing appliances and quantities")
+
+
 class ParsedAppliance(BaseModel):
-    name: str
-    category: str
-    multiplier: int
-    wattage: Optional[float] = None
-    horsepower: Optional[float] = None
-    amperage: Optional[float] = None                       # NEW
-    quantity: int = Field(1, ge=1)
-    uses_hp: bool = False
-    uses_amp: bool = False                                  # NEW
-    matched: bool = False
-    source: str = "llm"                                     # NEW: exact|amp|hp|btu|catalog|llm|needs_input|ambiguous
-    flagged_outlier: bool = False                            # NEW
-    outlier_note: Optional[str] = None                       # NEW
-    ambiguous: bool = False                                  # NEW
-    confirm_options: Optional[list] = None                   # NEW — populated only when ambiguous=True
- 
- 
-# ---------------------------------------------------------------------------
-# 3. PROMPT — the only behavioral change: explicitly forbid the LLM from
-#    doing amp/hp/btu -> watt arithmetic, and forbid it from inventing a
-#    wattage for a catalog match when the text gives no number. It should
-#    report raw numbers only.
-# ---------------------------------------------------------------------------
+    """One appliance extracted from free text."""
+
+    name: str = Field(..., description="Canonical appliance name (matched to catalog if possible)")
+    category: str = Field(..., description="Inductive | Resistive | Nonlinear")
+    multiplier: int = Field(..., description="Surge multiplier (3/4/1)")
+    wattage: Optional[float] = Field(None, description="Watts per unit, if stated or estimable")
+    horsepower: Optional[float] = Field(None, description="Horsepower, if stated (use null otherwise)")
+    amperage: Optional[float] = Field(None, description="Amperage, if stated (use null otherwise)")
+    quantity: int = Field(1, ge=1, description="Number of units")
+    uses_hp: bool = Field(False, description="Whether this appliance is sized by horsepower")
+    uses_amp: bool = Field(False, description="Whether wattage was derived from an amperage spec")
+    matched: bool = Field(False, description="True if name matched the known catalog")
+    # exact|amp|hp|btu|catalog|llm|needs_input|ambiguous — what the frontend uses
+    # to render the confidence badge.
+    source: str = Field("llm", description="How wattage was determined")
+    flagged_outlier: bool = Field(False, description="Stated wattage looks unusual vs catalog typical")
+    outlier_note: Optional[str] = Field(None, description="Why this wattage was flagged")
+    ambiguous: bool = Field(False, description="True if the spec was ambiguous and needs a user choice")
+    confirm_options: Optional[list] = Field(None, description="Choices offered when ambiguous=True")
+
+
+class ParseTextResponse(BaseModel):
+    """Structured list of appliances parsed from free text."""
+
+    appliances: list[ParsedAppliance] = Field(default_factory=list)
+
+
 def _build_parse_prompt(user_text: str) -> str:
     catalog_lines = "\n".join(
         f"- {a['name']} | category={a['category']} | multiplier={a['multiplier']} | usesHp={str(a['usesHp']).lower()}"
@@ -504,28 +515,41 @@ def _build_parse_prompt(user_text: str) -> str:
         "}\n\n"
         f"User text:\n{user_text}"
     )
- 
- 
-# ---------------------------------------------------------------------------
-# 4. DETERMINISTIC PRE-PASS — pull out lines matching the ambiguous "ph"
-#    pattern BEFORE they ever reach the LLM. This is fully deterministic and
-#    doesn't rely on the model noticing or reporting the ambiguity itself.
-# ---------------------------------------------------------------------------
+
+
+def _clean_llm_json(raw: str) -> str:
+    """Strip <think> blocks and markdown fences, isolate the JSON object."""
+    raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
+    fence = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", raw, flags=re.DOTALL)
+    if fence:
+        return fence.group(1)
+    if raw.startswith("```"):
+        raw = raw.strip("`")
+        if raw.lower().startswith("json"):
+            raw = raw[4:].strip()
+    return raw
+
+
 def _extract_ambiguous_ph_lines(user_text: str) -> tuple[str, list[dict]]:
-    """Returns (remaining_text_for_llm, list_of_ambiguous_appliance_dicts)."""
+    """Pull out lines matching the ambiguous "ph" pattern BEFORE the LLM sees them.
+
+    "ph" is ambiguous (phase vs a typo for "hp"), so we resolve it deterministically
+    by surfacing it as a confirm-choice to the user rather than letting the model
+    guess. Returns (remaining_text_for_llm, list_of_ambiguous_appliance_dicts).
+    """
     kept_lines = []
     ambiguous_items = []
- 
+
     for line in user_text.splitlines():
         m = PH_AMBIGUOUS_RE.search(line)
         if not m:
             kept_lines.append(line)
             continue
- 
+
         value = float(m.group(1))
         name = re.sub(PH_AMBIGUOUS_RE, "", line).strip(" -—:")
         name = re.sub(r'^\d+\s*(units?\s*)?(of\s+)?', '', name, flags=re.IGNORECASE).strip()
- 
+
         hp_watts = value * 746
         ambiguous_items.append({
             "name": name or line.strip(),
@@ -548,45 +572,46 @@ def _extract_ambiguous_ph_lines(user_text: str) -> tuple[str, list[dict]]:
             ],
         })
         # don't forward this line to the LLM — it's fully handled here
- 
+
     return "\n".join(kept_lines), ambiguous_items
- 
- 
-# ---------------------------------------------------------------------------
-# 5. DETERMINISTIC POST-PASS — apply conversions, catalog defaults, and the
-#    outlier sanity check to whatever the LLM returned. This is where amp/hp/
-#    btu arithmetic actually happens, not inside the model.
-# ---------------------------------------------------------------------------
+
+
 def _resolve_appliance(a: dict, raw_line_hint: str = "") -> dict:
+    """Apply conversions, catalog defaults, and an outlier sanity check.
+
+    This is where amp/hp/btu arithmetic happens, deterministically — never inside
+    the model. Sources, in priority order: explicit amperage, explicit horsepower,
+    explicit wattage, catalog default, or needs_input.
+    """
     catalog_entry = CATALOG_BY_NAME.get(a["name"])
- 
+
     # explicit amperage reported by the LLM -> deterministic conversion
     if a.get("amperage") is not None:
         a["wattage"] = a["amperage"] * AMP_TO_WATT_VOLTAGE
         a["source"] = "amp"
         a["uses_amp"] = True
- 
-    # explicit horsepower -> deterministic conversion (matches your existing
-    # frontend constant of 746; keep this the single source of truth and have
-    # the frontend read it from the API response rather than hardcoding twice)
+
+    # explicit horsepower -> deterministic conversion (matches the frontend's
+    # 746; keep this the single source of truth and have the frontend read it
+    # from the API response rather than hardcoding twice)
     elif a.get("horsepower") is not None:
         a["wattage"] = a["horsepower"] * 746
         a["source"] = "hp"
         a["uses_hp"] = True
- 
+
     # explicit wattage stated in text
     elif a.get("wattage") is not None:
         a["source"] = "exact"
- 
+
     # nothing stated -> catalog default, if this appliance type allows one
     elif catalog_entry and catalog_entry["name"] not in NEVER_DEFAULT and catalog_entry["typical_watts"]:
         a["wattage"] = catalog_entry["typical_watts"]
         a["source"] = "catalog"
- 
+
     else:
         a["wattage"] = None
         a["source"] = "needs_input"
- 
+
     # outlier sanity check — only meaningful for catalog matches with an
     # explicitly stated (not defaulted) wattage
     if catalog_entry and catalog_entry.get("typical_watts") and a["source"] in ("exact", "amp"):
@@ -597,23 +622,32 @@ def _resolve_appliance(a: dict, raw_line_hint: str = "") -> dict:
                 f"{a['wattage']:.0f}W is unusual for a {a['name']} "
                 f"(typical ~{typical}W) — verify against the nameplate"
             )
- 
+
     return a
- 
- 
+
+
 def _parse_appliances_from_text(user_text: str) -> list[dict]:
+    """Call Groq to turn free text into a structured appliance list.
+
+    Flow: deterministic pre-pass strips ambiguous "ph" lines, then the LLM only
+    names/categorises and reports raw numbers, then a deterministic post-pass
+    applies conversions, catalog defaults, and outlier checks.
+    """
     if not user_text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty")
- 
+
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
-        raise HTTPException(status_code=500, detail="GROQ_API_KEY is not configured on the server")
- 
-    # NEW: strip ambiguous lines out before the LLM ever sees them
+        raise HTTPException(
+            status_code=500,
+            detail="GROQ_API_KEY is not configured on the server",
+        )
+
+    # strip ambiguous lines out before the LLM ever sees them
     llm_text, ambiguous_items = _extract_ambiguous_ph_lines(user_text)
- 
+
     normalised = list(ambiguous_items)  # ambiguous items need no LLM call at all
- 
+
     if llm_text.strip():
         client = Groq(api_key=api_key)
         prompt = _build_parse_prompt(llm_text)
@@ -626,7 +660,7 @@ def _parse_appliances_from_text(user_text: str) -> list[dict]:
             )
         except Exception as exc:
             raise HTTPException(status_code=502, detail=f"Groq API error: {exc}") from exc
- 
+
         raw = response.choices[0].message.content.strip()
         cleaned = _clean_llm_json(raw)
         try:
@@ -634,10 +668,13 @@ def _parse_appliances_from_text(user_text: str) -> list[dict]:
         except json.JSONDecodeError:
             brace = re.search(r"\{.*\}", cleaned, flags=re.DOTALL)
             data = json.loads(brace.group(0)) if brace else None
- 
+
         if not isinstance(data, dict) or "appliances" not in data:
-            raise HTTPException(status_code=502, detail=f"Could not parse a JSON response from Groq. Raw: {raw[:500]}")
- 
+            raise HTTPException(
+                status_code=502,
+                detail=f"Could not parse a JSON response from Groq. Raw: {raw[:500]}",
+            )
+
         for a in (data.get("appliances") or []):
             if not isinstance(a, dict) or not a.get("name"):
                 continue
@@ -651,13 +688,13 @@ def _parse_appliances_from_text(user_text: str) -> list[dict]:
                 qty = max(1, int(a.get("quantity", 1)))
             except (TypeError, ValueError):
                 qty = 1
- 
+
             def _num(v):
                 try:
                     return float(v) if v is not None else None
                 except (TypeError, ValueError):
                     return None
- 
+
             entry = {
                 "name": str(a["name"]),
                 "category": category,
@@ -676,11 +713,22 @@ def _parse_appliances_from_text(user_text: str) -> list[dict]:
                 "confirm_options": None,
             }
             normalised.append(_resolve_appliance(entry))
- 
+
     return normalised
- 
- 
-@app.post("/parse-text", response_model=ParseTextResquest, tags=["Appliance Parsing"])
+
+
+@app.post(
+    "/parse-text",
+    response_model=ParseTextResponse,
+    tags=["Appliance Parsing"],
+    summary="Parse a free-text appliance list into structured appliances",
+    description=(
+        "Accepts free text (typed list, transcribed speech, or text extracted "
+        "from a PDF) and returns a structured list of appliances, each matched "
+        "to the known catalog where possible so category and surge multiplier "
+        "are filled in. The frontend shows a confirm step before adding them."
+    ),
+)
 async def parse_text(request: ParseTextRequest) -> ParseTextResponse:
     appliances = _parse_appliances_from_text(request.text)
     return ParseTextResponse(appliances=[ParsedAppliance(**a) for a in appliances])
