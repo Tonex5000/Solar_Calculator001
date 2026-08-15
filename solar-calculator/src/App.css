@@ -526,15 +526,41 @@ select:focus-visible,
   cursor: wait;
 }
 
-.upload-detect-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  border-color: var(--color-border-strong);
-  color: var(--color-text-faint);
-}
-
 .upload-detect-btn input[type="file"] {
   display: none;
+}
+
+/* Parse/Extract action buttons in the Text & PDF tabs — outlined counterpart
+   of .btn-submit: same angular clipped corner (clip-btn), green text + green
+   border so it reads clearly even at rest, and fills solid green on hover.
+
+   The green outline follows the clipped corner by painting the whole button
+   green and insetting a 1px dark layer (box-shadow) — a literal `border`
+   would be cut off by clip-path at the diagonal edges. */
+.btn-tab-action {
+  width: 100%;
+  padding: 16px 20px;
+  background: var(--color-green);
+  box-shadow: inset 0 0 0 1px var(--color-bg);
+  color: var(--color-green);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  clip-path: var(--clip-btn);
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-tab-action:hover:not(:disabled) {
+  background: var(--color-green);
+  box-shadow: none;
+  color: #0a0a0a;
+}
+
+.btn-tab-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .analysis-status {

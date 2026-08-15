@@ -137,7 +137,7 @@ export default function PdfTab({ onParsed, busy }) {
       <div className="tab-actions">
         <button
           type="button"
-          className="upload-detect-btn"
+          className="btn-tab-action"
           disabled={!fileName || loading || busy}
           onClick={handleExtract}
         >
