@@ -79,6 +79,117 @@
   margin-left: 6px;
 }
 
+/* Source/confidence badge — how the wattage was determined.
+   "high" = trust it (stated/converted), "low" = a default/estimate,
+   "needs_input" = still missing. */
+.source-tag {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  margin-left: 6px;
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-faint);
+}
+
+.source-tag.high {
+  color: var(--color-green);
+  border-color: var(--color-green-dim);
+  background: var(--color-green-glow);
+}
+
+.source-tag.low {
+  color: #f59e0b;
+  border-color: #f59e0b;
+}
+
+.source-tag.needs_input {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+/* Ambiguous row — a line like "2ph" that could mean HP or phase. No input
+   is shown until the user picks one of the confirm chips, so it gets its
+   own full-width, highlighted layout. */
+.parsed-row.ambiguous {
+  grid-template-columns: 1fr;
+  background: var(--color-panel-2);
+  border-color: #f59e0b;
+}
+
+.parsed-row.ambiguous .ambiguous-tag {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border: 1px solid #f59e0b;
+  color: #f59e0b;
+}
+
+.parsed-row.ambiguous .ambiguous-note {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--color-text-dim);
+  line-height: 1.5;
+}
+
+.confirm-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.confirm-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border-strong);
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.confirm-chip:hover {
+  border-color: var(--color-green-dim);
+  background: var(--color-green-glow);
+}
+
+.confirm-chip-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
+  color: var(--color-text);
+}
+
+.confirm-chip-watts {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-green);
+}
+
+/* "N items need your input" hint appended to the description. */
+.pending-note {
+  color: #f59e0b;
+}
+
+/* Outlier sanity-check warning under a row. */
+.outlier-note {
+  grid-column: 2 / 3;
+  margin: 4px 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: #ef4444;
+}
+
 .parsed-inputs {
   display: flex;
   gap: 10px;
@@ -86,6 +197,7 @@
 }
 
 .parsed-inputs .hp-input,
+.parsed-inputs .amp-input,
 .parsed-inputs .w-input,
 .parsed-inputs .qty-input {
   display: flex;
@@ -94,7 +206,8 @@
 }
 
 .parsed-inputs .w-input .field,
-.parsed-inputs .hp-input .field {
+.parsed-inputs .hp-input .field,
+.parsed-inputs .amp-input .field {
   width: 84px;
 }
 
