@@ -25,10 +25,10 @@ const APPLIANCES_DATA = [
   { name: 'Toaster', category: 'Resistive', multiplier: 4, wattage: '800 - 1,500 W' },
   { name: 'Electric Stove', category: 'Resistive', multiplier: 4, wattage: '2,000 - 5,000 W' },
   { name: 'Electric Oven', category: 'Resistive', multiplier: 4, wattage: '2,000 - 5,000 W' },
-  { name: 'Incandescent Bulb', category: 'Resistive', multiplier: 4, wattage: '40 - 100 W' },
   { name: 'Iron (Electric)', category: 'Resistive', multiplier: 4, wattage: '1,000 - 1,800 W' },
   { name: 'Microwave Oven', category: 'Resistive', multiplier: 4, wattage: '600 - 1,200 W' },
   // Nonlinear loads (Electronics) - Multiplier: 1
+  { name: 'Bulb', category: 'Nonlinear', multiplier: 1, wattage: '5 - 50 W' },
   { name: 'LED Light', category: 'Nonlinear', multiplier: 1, wattage: '5 - 20 W' },
   { name: 'CFL Light', category: 'Nonlinear', multiplier: 1, wattage: '5 - 20 W' },
   { name: 'LED TV', category: 'Nonlinear', multiplier: 1, wattage: '50 - 200 W' },
