@@ -671,6 +671,12 @@ select:focus-visible,
   cursor: not-allowed;
 }
 
+/* Trailing "Submit Load" button at the bottom of a step: gives breathing
+   room from the tab content (e.g. the Parse Appliances button) above it. */
+.step-content > .btn-submit {
+  margin-top: 28px;
+}
+
 /* ==================== SELECT DROPDOWN ==================== */
 select {
   width: 100%;
