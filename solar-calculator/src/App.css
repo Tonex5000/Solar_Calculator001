@@ -526,6 +526,13 @@ select:focus-visible,
   cursor: wait;
 }
 
+.upload-detect-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: var(--color-border-strong);
+  color: var(--color-text-faint);
+}
+
 .upload-detect-btn input[type="file"] {
   display: none;
 }

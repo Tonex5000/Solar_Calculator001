@@ -93,25 +93,5 @@
 
 .tab-actions {
   display: flex;
-  justify-content: flex-end;
   margin-top: 16px;
-}
-
-.tab-actions .btn-submit {
-  background: var(--color-green);
-  color: #0a0a0a;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 15px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 12px 24px;
-  border: none;
-  cursor: pointer;
-  clip-path: var(--clip-btn);
-}
-
-.tab-actions .btn-submit:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
 }

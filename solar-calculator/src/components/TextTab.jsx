@@ -51,7 +51,7 @@ export default function TextTab({ onParsed, busy }) {
       <div className="tab-actions">
         <button
           type="button"
-          className="btn-submit"
+          className="upload-detect-btn"
           disabled={!text.trim() || loading || busy}
           onClick={handleParse}
         >
