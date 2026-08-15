@@ -313,6 +313,9 @@ def _extract_wattage_from_image(image_bytes: bytes, mime_type: str) -> dict:
             ],
             temperature=0,
             max_completion_tokens=500,
+            # qwen3 is a reasoning model — disable chain-of-thought so the
+            # JSON answer isn't crowded out by the reasoning preamble.
+            reasoning_effort="none",
         )
     except Exception as exc:  # groq client raises its own exception types
         raise HTTPException(status_code=502, detail=f"Groq API error: {exc}") from exc
@@ -518,8 +521,20 @@ def _build_parse_prompt(user_text: str) -> str:
 
 
 def _clean_llm_json(raw: str) -> str:
-    """Strip <think> blocks and markdown fences, isolate the JSON object."""
-    raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
+    """Strip <thinking> blocks and markdown fences, isolate the JSON object.
+
+    Handles a truncated reasoning preamble: if an opening <thinking> tag has
+    no matching close (the response was cut off mid-thought before the JSON
+    was emitted), drop everything from that opening tag to the end -- there
+    is no JSON to recover there, and keeping the reasoning text would
+    surface it as a confusing "Could not parse" error.
+    """
+    if "<thinking>" in raw and "</thinking>" in raw:
+        # closed block -- remove the whole thinking section
+        raw = re.sub(r"<thinking>.*?</thinking>", "", raw, flags=re.DOTALL).strip()
+    elif "<thinking>" in raw:
+        # unclosed block -- truncated before any answer was produced
+        raw = re.sub(r"<thinking>.*", "", raw, flags=re.DOTALL).strip()
     fence = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", raw, flags=re.DOTALL)
     if fence:
         return fence.group(1)
@@ -656,7 +671,12 @@ def _parse_appliances_from_text(user_text: str) -> list[dict]:
                 model=GROQ_MODEL,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0,
-                max_completion_tokens=1500,
+                max_completion_tokens=8000,
+                # qwen3 is a reasoning model: disable chain-of-thought so the
+                # model emits JSON directly. Otherwise the reasoning preamble
+                # eats the token budget on large lists and the JSON is never
+                # produced (truncation -> "Could not parse a JSON response").
+                reasoning_effort="none",
             )
         except Exception as exc:
             raise HTTPException(status_code=502, detail=f"Groq API error: {exc}") from exc
