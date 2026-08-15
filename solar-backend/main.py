@@ -680,7 +680,7 @@ def _parse_appliances_from_text(user_text: str) -> list[dict]:
     return normalised
  
  
-@app.post("/parse-text", response_model=ParseTextResponse, tags=["Appliance Parsing"])
+@app.post("/parse-text", response_model=ParseTextResquest, tags=["Appliance Parsing"])
 async def parse_text(request: ParseTextRequest) -> ParseTextResponse:
     appliances = _parse_appliances_from_text(request.text)
     return ParseTextResponse(appliances=[ParsedAppliance(**a) for a in appliances])
