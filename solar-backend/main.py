@@ -18,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from groq import Groq
+from openai import OpenAI
 
 # Constants
 BATTERY_RATED_VOLTAGE = 12  # 12V batteries for battery count estimation
@@ -25,6 +26,22 @@ BATTERY_RATED_CAPACITY = 220  # 200Ah batteries
 
 GROQ_MODEL = "qwen/qwen3.6-27b"
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+
+# ---------------------------------------------------------------------------
+# LLM provider selection for text parsing
+# ---------------------------------------------------------------------------
+# NVIDIA NIM is OpenAI-compatible and hosts openai/gpt-oss-120b (text only).
+# When NVIDIA_API_KEY is configured, the free-text appliance parser
+# (/parse-text) runs on NVIDIA; otherwise it falls back to Groq. The two
+# media endpoints stay on Groq because gpt-oss-120b has no vision/audio:
+#   - /analyze-adapter  (Groq vision, reads an adapter label photo)
+#   - /transcribe       (Groq Whisper, audio -> text)
+NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
+NVIDIA_MODEL = "openai/gpt-oss-120b"
+# gpt-oss-120b is a reasoning model. "low" keeps the structured-output parse
+# fast and avoids burning the token budget on chain-of-thought before the
+# JSON object is emitted (same rationale as Groq's reasoning_effort="none").
+NVIDIA_REASONING_EFFORT = "low"
 
 
 class SolarCalculationInput(BaseModel):
@@ -476,6 +493,66 @@ class ParseTextResponse(BaseModel):
     appliances: list[ParsedAppliance] = Field(default_factory=list)
 
 
+def _get_text_llm_client():
+    """Pick the text-parse LLM provider.
+
+    Returns (client, model, provider) where provider is "nvidia" or "groq".
+    NVIDIA NIM (openai/gpt-oss-120b) is preferred when NVIDIA_API_KEY is set;
+    otherwise the parser falls back to Groq. Both are OpenAI-compatible for
+    chat completions, so the caller is identical apart from the model id and
+    the reasoning-effort / json-mode kwargs each provider accepts.
+    """
+    nvidia_key = os.environ.get("NVIDIA_API_KEY")
+    if nvidia_key:
+        return OpenAI(base_url=NVIDIA_BASE_URL, api_key=nvidia_key), NVIDIA_MODEL, "nvidia"
+
+    groq_key = os.environ.get("GROQ_API_KEY")
+    if not groq_key:
+        raise HTTPException(
+            status_code=500,
+            detail="No LLM provider configured: set NVIDIA_API_KEY (preferred) or GROQ_API_KEY on the server",
+        )
+    return Groq(api_key=groq_key), GROQ_MODEL, "groq"
+
+
+def _complete_appliance_parse(client, model: str, provider: str, prompt: str) -> str:
+    """Run a chat completion for the appliance parser and return raw text.
+
+    Provider-specific differences are kept here so the rest of the pipeline is
+    identical regardless of which LLM produced the JSON:
+
+    - NVIDIA NIM (openai/gpt-oss-120b): reasoning model; pass reasoning_effort
+      to cap chain-of-thought, and use strict json_object response_format so the
+      model emits a single JSON object. temperature/top_p follow NVIDIA's
+      gpt-oss-120b model-card defaults for stable structured output.
+    - Groq (qwen3): reasoning_effort="none" (non-reasoning mode) for the same
+      reason; Groq does not accept response_format json_schema, so the prompt
+      itself constrains the shape and _clean_llm_json recovers the object.
+    """
+    messages = [{"role": "user", "content": prompt}]
+
+    if provider == "nvidia":
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=0.6,
+            top_p=0.9,
+            max_completion_tokens=8000,
+            reasoning_effort=NVIDIA_REASONING_EFFORT,
+            response_format={"type": "json_object"},
+        )
+    else:
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=0,
+            max_completion_tokens=8000,
+            reasoning_effort="none",
+        )
+
+    return response.choices[0].message.content.strip()
+
+
 def _build_parse_prompt(user_text: str) -> str:
     catalog_lines = "\n".join(
         f"- {a['name']} | category={a['category']} | multiplier={a['multiplier']} | usesHp={str(a['usesHp']).lower()}"
@@ -642,21 +719,20 @@ def _resolve_appliance(a: dict, raw_line_hint: str = "") -> dict:
 
 
 def _parse_appliances_from_text(user_text: str) -> list[dict]:
-    """Call Groq to turn free text into a structured appliance list.
+    """Call an LLM to turn free text into a structured appliance list.
 
     Flow: deterministic pre-pass strips ambiguous "ph" lines, then the LLM only
     names/categorises and reports raw numbers, then a deterministic post-pass
     applies conversions, catalog defaults, and outlier checks.
+
+    The LLM is NVIDIA NIM (openai/gpt-oss-120b) when NVIDIA_API_KEY is set,
+    otherwise Groq. Both are OpenAI-compatible for chat completions; provider
+    differences live in _complete_appliance_parse.
     """
     if not user_text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty")
 
-    api_key = os.environ.get("GROQ_API_KEY")
-    if not api_key:
-        raise HTTPException(
-            status_code=500,
-            detail="GROQ_API_KEY is not configured on the server",
-        )
+    client, model, provider = _get_text_llm_client()
 
     # strip ambiguous lines out before the LLM ever sees them
     llm_text, ambiguous_items = _extract_ambiguous_ph_lines(user_text)
@@ -664,24 +740,16 @@ def _parse_appliances_from_text(user_text: str) -> list[dict]:
     normalised = list(ambiguous_items)  # ambiguous items need no LLM call at all
 
     if llm_text.strip():
-        client = Groq(api_key=api_key)
         prompt = _build_parse_prompt(llm_text)
         try:
-            response = client.chat.completions.create(
-                model=GROQ_MODEL,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0,
-                max_completion_tokens=8000,
-                # qwen3 is a reasoning model: disable chain-of-thought so the
-                # model emits JSON directly. Otherwise the reasoning preamble
-                # eats the token budget on large lists and the JSON is never
-                # produced (truncation -> "Could not parse a JSON response").
-                reasoning_effort="none",
-            )
+            raw = _complete_appliance_parse(client, model, provider, prompt)
+        except HTTPException:
+            raise
         except Exception as exc:
-            raise HTTPException(status_code=502, detail=f"Groq API error: {exc}") from exc
+            raise HTTPException(
+                status_code=502, detail=f"{provider.capitalize()} API error: {exc}"
+            ) from exc
 
-        raw = response.choices[0].message.content.strip()
         cleaned = _clean_llm_json(raw)
         try:
             data = json.loads(cleaned)
@@ -692,7 +760,7 @@ def _parse_appliances_from_text(user_text: str) -> list[dict]:
         if not isinstance(data, dict) or "appliances" not in data:
             raise HTTPException(
                 status_code=502,
-                detail=f"Could not parse a JSON response from Groq. Raw: {raw[:500]}",
+                detail=f"Could not parse a JSON response from {provider.capitalize()}. Raw: {raw[:500]}",
             )
 
         for a in (data.get("appliances") or []):

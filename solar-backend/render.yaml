@@ -5,3 +5,8 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
     plan: free
+
+# Env vars (set in the Render dashboard, NOT here — this file is committed):
+#   NVIDIA_API_KEY  — enables NVIDIA NIM (openai/gpt-oss-120b) for /parse-text
+#   GROQ_API_KEY   — required for /analyze-adapter (vision) and /transcribe (Whisper)
+# If NVIDIA_API_KEY is unset, /parse-text falls back to Groq (qwen3).
