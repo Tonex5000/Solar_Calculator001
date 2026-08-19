@@ -110,10 +110,10 @@ Please respond to the user based on their message and the extracted data above. 
                 {"role": "user", "content": full_prompt}
             ],
             temperature=0.7,
-            max_tokens=500,
+            max_tokens=16384,
             extra_body={
                     "chat_template_kwargs": {"enable_thinking": True},
-                    "reasoning_budget": 400
+                    "reasoning_budget": 16384
                 }
         )
         message = response.choices[0].message
