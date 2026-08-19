@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 // map `reply` to the assistant bubble's `text`.
 // ---------------------------------------------------------------------------
 const AI_BACKEND_URL =
-  import.meta.env.VITE_AI_BACKEND_URL || "http://localhost:8000";
+  import.meta.env.VITE_AI_BACKEND_URL || "https://solar-calculator001-3-5qgs.onrender.com";
 
 async function askAIEngineer(text) {
   const response = await fetch(`${AI_BACKEND_URL}/chat`, {
