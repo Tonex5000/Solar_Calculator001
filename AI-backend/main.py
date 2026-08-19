@@ -59,10 +59,10 @@ async def chat(request: ChatRequest):
     if not request.message.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
     
-    if not os.getenv("GROQ_API_KEY"):
+    if not os.getenv("NVIDIA_API_KEY"):
         raise HTTPException(
             status_code=500, 
-            detail="Groq API key not configured. Please set GROQ_API_KEY in .env"
+            detail="NVIDIA API key not configured. Please set NVIDIA_API_KEY in .env"
         )
     
     try:

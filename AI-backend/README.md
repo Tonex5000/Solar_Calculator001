@@ -1,13 +1,13 @@
 # AI Backend - Solar Assistant
 
-FastAPI backend for the AI-powered Nigerian Solar Assistant using Groq API.
+FastAPI backend for the AI-powered Nigerian Solar Assistant using the NVIDIA NIM API (OpenAI-compatible).
 
 ## Setup
 
 1. Install dependencies:
 ```bash
 pip install --upgrade pip
-pip install fastapi "uvicorn[standard]" groq python-dotenv
+pip install fastapi "uvicorn[standard]" openai python-dotenv
 ```
 
 2. Create a `.env` file:
@@ -15,9 +15,15 @@ pip install fastapi "uvicorn[standard]" groq python-dotenv
 cp .env.example .env
 ```
 
-3. Add your Groq API key to `.env`:
+3. Add your NVIDIA API key to `.env`:
 ```
-GROQ_API_KEY=your_actual_api_key_here
+NVIDIA_API_KEY=your_actual_api_key_here
+```
+
+Optional overrides (defaults shown):
+```
+NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
+NVIDIA_MODEL=nvidia/nemotron-3.5-lightning-30b-a3b
 ```
 
 4. Run the server:
@@ -61,4 +67,4 @@ The AI acts as a Nigerian solar energy expert who:
 
 ## Model
 
-Uses `llama-3.3-70b-versatile` from Groq API for fast, intelligent responses.
+Uses `nvidia/nemotron-3.5-lightning-30b-a3b` from the NVIDIA NIM API (OpenAI-compatible) for fast, intelligent responses. Override with the `NVIDIA_MODEL` env var if needed.

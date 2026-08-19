@@ -4,10 +4,19 @@ Extracts structured data from user input about solar energy
 """
 
 import json
-from groq import Groq
+from openai import OpenAI
 import os
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+NVIDIA_BASE_URL = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
+NVIDIA_MODEL = os.getenv("NVIDIA_MODEL", "nvidia/nemotron-3.5-lightning-30b-a3b")
+
+# Construct lazily-tolerant: allow app to import even without a key so the
+# /health endpoint and the missing-key guard in main.py still work. A real
+# call without a key will fail fast with a clear auth error at request time.
+client = OpenAI(
+    api_key=os.getenv("NVIDIA_API_KEY") or "not-configured",
+    base_url=NVIDIA_BASE_URL,
+)
 
 # Supported intents
 SUPPORTED_INTENTS = [
@@ -133,7 +142,7 @@ def extract_intent(user_input: str) -> dict:
     
     try:
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model=NVIDIA_MODEL,
             messages=[
                 {"role": "system", "content": EXTRACTION_PROMPT},
                 {"role": "user", "content": user_input}
