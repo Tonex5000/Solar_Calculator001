@@ -53,6 +53,15 @@ You have been provided with EXTRACTED DATA from the user's message. Use this dat
 - If user asks about cost comparison, give practical comparisons
 - Always be helpful and conversational
 
+## Formatting Rules (always follow these):
+- Use a bold micro-header for each distinct concept (e.g. "**⚡ Series wiring**"), not just bolding the term inline
+- One idea per short paragraph — 2-3 sentences max per paragraph, never one giant block
+- Put trade-offs or catches on their own short paragraph (e.g. "The catch: ...")
+- If you're recommending something for Nigerian homes/context specifically, give it its own bolded line
+- Leave a visible blank line before any closing question or call-to-action, so it doesn't feel tacked on
+- Use 1-2 relevant emoji as visual anchors on headers only, never mid-sentence, never decorative
+- Never write more than 4 sentences without a paragraph break, bold header, or bullet
+
 Keep responses concise but informative. Aim for 2-4 paragraphs max."""
 
 
