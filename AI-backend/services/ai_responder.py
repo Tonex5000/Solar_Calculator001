@@ -5,6 +5,7 @@ Generates conversational responses based on structured data
 
 from openai import OpenAI
 import os
+import re
 
 NVIDIA_BASE_URL = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
 NVIDIA_MODEL = os.getenv("NVIDIA_MODEL", "nvidia/nemotron-3.5-lightning-30b-a3b")
@@ -109,11 +110,16 @@ Please respond to the user based on their message and the extracted data above. 
                 {"role": "user", "content": full_prompt}
             ],
             temperature=0.7,
-            max_tokens=500
+            max_tokens=500,
+            extra_body={
+                    "chat_template_kwargs": {"enable_thinking": True},
+                    "reasoning_budget": 400
+                }
         )
-        
-        reply = response.choices[0].message.content
-        return reply.strip()
+        message = response.choices[0].message
+        reply = getattr(message, "content", "") or ""
+        reply = re.sub(r"<think>.*?</think>", "", reply, flags=re.DOTALL).strip()
+        return reply
         
     except Exception as e:
         print(f"Response generation error: {e}")
