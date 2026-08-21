@@ -17,8 +17,8 @@ services:
         sync: false
       - key: SUPABASE_KEY
         sync: false
-      # Required for the LangChain agent entrypoint (langchain_agent.py),
-      # not for the HTTP wrapper itself.
+      # Required for POST /chat (the LangChain ReAct agent). Without it,
+      # /chat returns 503 while /health and /tools endpoints still work.
       - key: NVIDIA_API_KEY
         sync: false
       - key: NVIDIA_MODEL

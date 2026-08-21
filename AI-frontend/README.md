@@ -11,19 +11,22 @@ typing-indicator animations. `src/index.css` is a minimal document reset only.
 
 ## Response Logic
 
-`askAIEngineer()` in `AIEngineerPage.jsx` POSTs the user message to the AI-backend
-`/chat` endpoint and maps the returned `reply` field to the assistant bubble. The
-backend returns `{ intent, intent_label, data, reply }`; only `reply` is shown in
-the UI. Failures surface as an inline ⚠️ message in the thread.
+`askAIEngineer()` in `AIEngineerPage.jsx` POSTs `{ message: text }` to the
+AI-backend `/chat` endpoint and maps the returned `reply` field to the
+assistant bubble. The backend runs a LangChain ReAct agent over the Supabase
+product catalog (read-only MCP tools) and returns `{ "reply": ... }`; only
+`reply` is shown in the UI. Failures surface as an inline ⚠️ message in the
+thread.
 
 ## Configuration
 
-The backend URL is read from the `VITE_AI_BACKEND_URL` Vite env var, defaulting to
-`http://localhost:8000` for local dev. To target the deployed backend, create a
-`.env` file:
+The backend URL is read from the `VITE_AI_BACKEND_URL` Vite env var. The in-code
+default already points at the deployed Render backend
+(`https://solar-calculator001-3-5qgs.onrender.com`). Override for local dev via
+`.env`:
 
 ```
-VITE_AI_BACKEND_URL=https://your-ai-backend.onrender.com
+VITE_AI_BACKEND_URL=http://localhost:8000
 ```
 
 ## Setup

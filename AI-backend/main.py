@@ -13,9 +13,11 @@ Endpoints (all read-only, matching the read-only Supabase key policy in
 `supabase_client.py`):
 - GET  /health              -> {"status": "ok"}
 - GET  /tools               -> catalog of callable tool names
-- POST /chat                -> {"text": ...} sent to a named tool (the AI-frontend
-                               should use dedicated endpoints instead; this is a
-                               generic fallback)
+- POST /chat                -> the AI-frontend endpoint: {"message": ...} (or
+    {"text": ...}) → runs the same LangChain ReAct agent defined in
+    langchain_agent.py, with the full toolset, and returns {"reply": ...}.
+    Needs NVIDIA_API_KEY; without it, /chat returns 503 and everything else
+    still works.
 - GET  /tools/{name}        -> invoke a tool with query-string args
 - POST /tools/{name}        -> invoke a tool with a JSON body
 """
@@ -25,6 +27,7 @@ import sys
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ValidationError
 
 # Render may run `uvicorn main:app` from the repo root even though the app
@@ -42,8 +45,16 @@ _TOOL_MANAGER = server.mcp._tool_manager
 
 app = FastAPI(
     title="Voltra Product Catalog (MCP over HTTP)",
-    version="1.0.0",
+    version="1.1.0",
     description="Read-only HTTP wrapper around the voltra-product-db MCP tools.",
+)
+
+# CORS: the AI-frontend (browser) calls this from a different origin.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -109,42 +120,57 @@ def _coerce_and_call(name: str, raw_args: dict[str, Any]) -> dict[str, Any]:
 
 
 # --- /chat ---------------------------------------------------------------
-# Deterministic free-text dispatcher: the AI-frontend uses dedicated endpoints
-# today; this endpoint maps {"text", "tool"} to a single-name tool call using
-# the most common argument the tool accepts, and it says so in the response.
-# Hard-rejects empty text like the old /chat for API-contract familiarity.
-class ChatTextIn(BaseModel):
-    text: str
-    tool: str = "search_products"
+# The agent is built lazily on first use so /health and the tool endpoints work
+# even if NVIDIA_API_KEY is missing. The built client launches server.py as a
+# stdio MCP subprocess — exactly what the terminal chat loop does.
+_AGENT = None
+_AGENT_ERR: str | None = None
+
+
+async def _get_agent():
+    global _AGENT, _AGENT_ERR
+    if _AGENT is not None:
+        return _AGENT
+    if _AGENT_ERR:
+        raise HTTPException(status_code=503, detail=_AGENT_ERR)
+    try:
+        from langchain_agent import build_agent
+        _AGENT = await build_agent()
+    except KeyError as e:
+        # e.g. os.environ["NVIDIA_API_KEY"] inside build_agent()
+        _AGENT_ERR = f"chat agent unavailable: missing environment variable {e}"
+        raise HTTPException(status_code=503, detail=_AGENT_ERR) from e
+    except Exception as e:
+        _AGENT_ERR = f"chat agent unavailable: failed to build: {e}"
+        raise HTTPException(status_code=503, detail=_AGENT_ERR) from e
+    return _AGENT
+
+
+class ChatIn(BaseModel):
+    """AI-frontend payload: it sends {"message": ...}; {"text": ...} also works."""
+    message: str | None = None
+    text: str | None = None
 
 
 @app.post("/chat")
-def chat(payload: ChatTextIn) -> dict:
-    text = payload.text.strip()
-    if not text:
-        raise HTTPException(status_code=400, detail="text cannot be empty")
-
-    # Route by keyword relevance to a catalog-ish tool. Most tools take a
-    # scalar first arg; pick the arg name that best matches the tool's use.
-    tool = payload.tool
-    manager = _TOOL_MANAGER
-    if tool not in manager._tools:
+async def chat(payload: ChatIn) -> dict:
+    user_text = (payload.message or payload.text or "").strip()
+    if not user_text:
         raise HTTPException(
             status_code=400,
-            detail=f"Unknown tool '{tool}'. GET /tools lists callable names.",
+            detail="Pass 'message' (or 'text') with the user's question.",
         )
-    arg_model = manager._tools[tool].fn_metadata.arg_model
-    fields = list(arg_model.model_fields.keys())
 
-    # Prefer a string-ish first field (category/manufacturer/id); otherwise
-    # fall back to the single field that's declared required with no default.
-    chosen = next(
-        (f for f in fields if f in ("category", "manufacturer", "product_id", "product_ids")),
-        fields[0] if fields else None,
-    )
-    arg_value: Any = [text] if chosen == "product_ids" else text
-    result = _coerce_and_call(tool, {chosen: arg_value} if chosen else {})
-    return {"reply": result["result"], "tool": tool, "arg_used": chosen}
+    agent = await _get_agent()
+
+    try:
+        # Stateless per message, matching the old Layer-2 service's contract.
+        result = await agent.ainvoke({"messages": [("user", user_text)]})
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"agent failed: {e}") from e
+
+    reply = result["messages"][-1].content
+    return {"reply": reply}
 
 
 # --- /tools/{name} --------------------------------------------------------
