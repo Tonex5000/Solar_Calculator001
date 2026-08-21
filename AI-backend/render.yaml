@@ -1,0 +1,25 @@
+# Render blueprint for the AI-backend ASGI wrapper.
+#
+# This replaces the old FastAPI "Layer 2" service's render.yaml. The backend
+# itself is an MCP server (server.py); main.py re-exposes the same 13
+# read-only tools over HTTP so Render can host it as a web service.
+services:
+  - type: web
+    name: ai-solar-backend
+    env: python
+    rootDir: AI-backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      # Required for the catalog tools; use a READ-ONLY key (see
+      # supabase_client.py docstring and SCHEMA_ASSUMPTIONS.md).
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      # Required for the LangChain agent entrypoint (langchain_agent.py),
+      # not for the HTTP wrapper itself.
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: NVIDIA_MODEL
+        value: nvidia/nemotron-3.5-lightning-30b-a3b

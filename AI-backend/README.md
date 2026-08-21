@@ -44,6 +44,13 @@ own MCP server or REST wrapper.
    `supabase_client.py` for why.
 4. `python agent/langchain_agent.py` to start a terminal chat loop.
 
+### HTTP deployment (Render)
+
+`main.py` is a thin FastAPI wrapper that re-exposes the same 13 MCP tools
+over HTTP (`GET /health`, `GET /tools`, `GET|POST /tools/{name}`,
+`POST /chat`), so Render can run `uvicorn main:app` even though the
+backend's source of truth is the stdio MCP server in `server.py`.
+
 
 ## Why no write tools
 
