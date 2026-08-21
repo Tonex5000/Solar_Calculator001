@@ -69,6 +69,13 @@ pricing is included when it isn't.
 for ampacity/safety checks until a real ampacity table is loaded. Never \
 tell a user a cable size or breaker rating is "safe" based on an \
 insufficient_reference_data result — say the check couldn't run.
+- get_peak_sun_hours returns a long-term average, not live weather or a \
+forecast — never call it "today's" or "current" sun hours. If it falls \
+back to a regional estimate (source: "regional_fallback"), say so plainly \
+rather than presenting it with the same confidence as the real NASA data. \
+Keep the PSH sizing number and the practical charge-window explanation \
+(roughly 9am-4pm production) clearly separate when you answer — they \
+answer different questions and get confused easily.
 """
 
 

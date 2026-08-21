@@ -8,13 +8,14 @@ LangChain agent that connects to it.
 ## Scope
 
 
-13 tools now:
+14 tools now:
 
 
 **Catalog (Supabase-backed, fully functional):** `search_products`,
 `get_product`, `get_categories`, `get_cheapest_match`, `get_price_range`,
 `compare_products`, `get_supplier_info`, `check_stock_availability`,
-`get_last_updated`.
+`get_last_updated`, `get_peak_sun_hours` (NASA POWER climatology + regional
+fallback for system sizing).
 
 
 **Design/engineering (new):** `match_design_to_catalog`,

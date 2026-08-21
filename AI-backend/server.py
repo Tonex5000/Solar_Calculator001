@@ -23,6 +23,7 @@ code-level guarantee.
 import supabase_client as db
 import design
 import Engineering
+import peak_sun_hours
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 
@@ -232,6 +233,25 @@ def check_system_safety(design_spec: dict) -> dict:
     rather than "pass" if reference data (e.g. ampacity table) is missing.
     """
     return Engineering.check_system_safety(design_spec)
+
+
+
+
+@mcp.tool()
+def get_peak_sun_hours(
+    location: str | None = None,
+    latitude: float | None = None,
+    longitude: float | None = None,
+) -> dict:
+    """
+    Peak sun hours (PSH) for a location — the sizing figure used for
+    solar array calculations, not a clock-hour charge window. Prefers
+    real per-coordinate NASA POWER climatology data; falls back to a
+    rough regional estimate if geocoding or the API is unreachable.
+    Pass either a place name via `location`, or `latitude`+`longitude`
+    directly (more reliable, skips geocoding).
+    """
+    return peak_sun_hours.get_peak_sun_hours(location, latitude, longitude)
 
 
 
